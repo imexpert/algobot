@@ -1,0 +1,416 @@
+{
+  "@@locale": "en",
+  "appTitle": "AlgoBot",
+  "play": "Play",
+  "soundOn": "Sound on",
+  "soundOff": "Sound off",
+  "parent": "Parents",
+  "characters": "Characters",
+  "gallery": "Character gallery",
+  "back": "Back",
+  "ageRange": "{age, select, ages5to7{Ages 5–7} ages8to12{Ages 8–12} other{Ages 13+}}",
+  "@ageRange": {
+    "description": "Yaş aralığının uzun adı",
+    "placeholders": {
+      "age": {
+        "type": "String"
+      }
+    }
+  },
+  "ageShort": "{age, select, ages5to7{5–7} ages8to12{8–12} other{13+}}",
+  "@ageShort": {
+    "description": "Yaş aralığının kısa adı",
+    "placeholders": {
+      "age": {
+        "type": "String"
+      }
+    }
+  },
+  "worldTitle": "World 1 · Factory · {ageRange}",
+  "@worldTitle": {
+    "placeholders": {
+      "ageRange": {
+        "type": "String"
+      }
+    }
+  },
+  "totalStars": "Your stars: {earned} / {total}",
+  "@totalStars": {
+    "placeholders": {
+      "earned": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "nextWorldTeaser": "World 2 coming soon: Loops!",
+  "levelCardLabel": "Level {id}, {title}, {stars, plural, =0{no stars} =1{1 star} other{{stars} stars}}",
+  "@levelCardLabel": {
+    "placeholders": {
+      "id": {
+        "type": "int"
+      },
+      "title": {
+        "type": "String"
+      },
+      "stars": {
+        "type": "int"
+      }
+    }
+  },
+  "levelCardLockedLabel": "Level {id}, {title}, locked",
+  "@levelCardLockedLabel": {
+    "placeholders": {
+      "id": {
+        "type": "int"
+      },
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "levelCardSkippedLabel": "Level {id}, {title}, skipped",
+  "@levelCardSkippedLabel": {
+    "placeholders": {
+      "id": {
+        "type": "int"
+      },
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "levelCardNoLivesLabel": "Level {id}, {title}, no lives. Next life: {time}",
+  "@levelCardNoLivesLabel": {
+    "placeholders": {
+      "id": {
+        "type": "int"
+      },
+      "title": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "levelHeader": "World 1 · Level {id}",
+  "@levelHeader": {
+    "placeholders": {
+      "id": {
+        "type": "int"
+      }
+    }
+  },
+  "program": "Your program",
+  "paletteSemanticsLabel": "Commands",
+  "@paletteSemanticsLabel": {
+    "description": "Komut paletinin ekran okuyucu etiketi (görünmez)"
+  },
+  "slotCounter": "{used} / {max}",
+  "@slotCounter": {
+    "placeholders": {
+      "used": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "clear": "Clear",
+  "run": "Run",
+  "stop": "Stop",
+  "fast": "Fast",
+  "tryAgain": "Try again",
+  "emptyProgram": "Add a command first",
+  "stripFull": "No more room",
+  "stepInfo": "Step {step} / {total} · {command}",
+  "@stepInfo": {
+    "placeholders": {
+      "step": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      },
+      "command": {
+        "type": "String"
+      }
+    }
+  },
+  "crashMessage": "Bump! You hit a wall. Fix your program and try again.",
+  "stoppedShortMessage": "The program ended, but you didn't reach the goal.",
+  "tapToClose": "Tap to close",
+  "board": "Game board",
+  "cmdForward": "Forward",
+  "cmdRight": "Right",
+  "cmdLeft": "Left",
+  "cmdTurnRight": "Turn right",
+  "cmdTurnLeft": "Turn left",
+  "cmdUp": "Up",
+  "cmdDown": "Down",
+  "cmdMoveLeft": "Left",
+  "cmdMoveRight": "Right",
+  "paletteCardLabel": "{command} card",
+  "@paletteCardLabel": {
+    "placeholders": {
+      "command": {
+        "type": "String"
+      }
+    }
+  },
+  "stripCardLabel": "Remove from program: {command}",
+  "@stripCardLabel": {
+    "placeholders": {
+      "command": {
+        "type": "String"
+      }
+    }
+  },
+  "emptySlotLabel": "Empty slot {n}",
+  "@emptySlotLabel": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "livesLabel": "{n, plural, =0{No lives left} =1{1 life left} other{{n} lives left}}",
+  "@livesLabel": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "lastLife": "Last life!",
+  "outOfLivesTitle": "Out of lives",
+  "outOfLivesBody": "That's okay! Take a break and try again.",
+  "nextLife": "Next life: {time}",
+  "@nextLife": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "mainMenu": "Main menu",
+  "useLifeJoker": "Use Extra Life (+1)",
+  "skipLevelAction": "Skip this level",
+  "watchVideoAction": "Watch a video to skip",
+  "jokerSkip": "Skip",
+  "jokerLife": "Life",
+  "jokerVideo": "Video",
+  "jokerUsedLabel": "{name}, used",
+  "@jokerUsedLabel": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "skipConfirm": "Skip this level? You won't earn stars for a skipped level.",
+  "skipConfirmYes": "Skip",
+  "skippedLabel": "Skipped",
+  "videoFailed": "The video couldn't load right now.",
+  "videoPlaceholder": "Video will play here",
+  "resultOneStar": "You did it!",
+  "resultTwoStars": "Great job!",
+  "resultThreeStars": "Perfect!",
+  "resultCommands": "Commands used: {used} · Shortest: {optimal}",
+  "@resultCommands": {
+    "placeholders": {
+      "used": {
+        "type": "int"
+      },
+      "optimal": {
+        "type": "int"
+      }
+    }
+  },
+  "collectedCount": "{character, select, bip{Batteries} pati{Fish} vizviz{Honey drops} buzi{Ice crystals} tosbi{Strawberries} hop{Carrots} zorp{Stars} kivilcim{Coins} other{?}}: {got} / {total}",
+  "@collectedCount": {
+    "description": "Toplanan nesne sayısı, karakterin toplanabilir adıyla",
+    "placeholders": {
+      "character": {
+        "type": "String"
+      },
+      "got": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "hintCollect": "Collect all the {character, select, bip{batteries} pati{fish} vizviz{honey drops} buzi{ice crystals} tosbi{strawberries} hop{carrots} zorp{stars} kivilcim{coins} other{?}} to earn the 2nd star.",
+  "@hintCollect": {
+    "placeholders": {
+      "character": {
+        "type": "String"
+      }
+    }
+  },
+  "hintShorter": "Can you do it in {optimal} commands?",
+  "@hintShorter": {
+    "placeholders": {
+      "optimal": {
+        "type": "int"
+      }
+    }
+  },
+  "again": "Retry",
+  "next": "Next",
+  "starsLabel": "{stars, plural, =1{1 star out of 3} other{{stars} stars out of 3}}",
+  "@starsLabel": {
+    "placeholders": {
+      "stars": {
+        "type": "int"
+      }
+    }
+  },
+  "characterName": "{id, select, bip{Bip} pati{Whiskers} vizviz{Buzzy} buzi{Pingo} tosbi{Shelly} hop{Hop} zorp{Zorp} kivilcim{Sparky} other{?}}",
+  "@characterName": {
+    "description": "Karakter adı (kimliğe göre)",
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "collectibleOf": "Collects: {id, select, bip{battery} pati{fish} vizviz{honey drop} buzi{ice crystal} tosbi{strawberry} hop{carrot} zorp{star} kivilcim{coin} other{?}}",
+  "@collectibleOf": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "select": "Choose",
+  "selectedLabel": "Chosen",
+  "unlockAt": "Unlocks at {stars} stars",
+  "@unlockAt": {
+    "placeholders": {
+      "stars": {
+        "type": "int"
+      }
+    }
+  },
+  "unlockProgress": "{have} / {need}",
+  "@unlockProgress": {
+    "placeholders": {
+      "have": {
+        "type": "int"
+      },
+      "need": {
+        "type": "int"
+      }
+    }
+  },
+  "newFriend": "New friend: {name}!",
+  "@newFriend": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "tryNow": "Try now",
+  "later": "Later",
+  "characterCardLocked": "{name}, locked",
+  "@characterCardLocked": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "characterCardSelected": "{name}, chosen",
+  "@characterCardSelected": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "welcomeAge": "Hi! How old are you?",
+  "pickFriend": "Pick a friend!",
+  "start": "Start",
+  "parentGateTitle": "For parents",
+  "parentQuestion": "What is {a} + {b}?",
+  "@parentQuestion": {
+    "placeholders": {
+      "a": {
+        "type": "int"
+      },
+      "b": {
+        "type": "int"
+      }
+    }
+  },
+  "wrongAnswer": "Not quite. Try again.",
+  "ok": "OK",
+  "delete": "Delete",
+  "close": "Close",
+  "settings": "Settings",
+  "sound": "Sound",
+  "ageRangeTitle": "Age range",
+  "resetProgress": "Reset progress",
+  "resetConfirmTitle": "Are you sure?",
+  "resetConfirmBody": "All stars will be erased and levels will lock again.",
+  "cancel": "Cancel",
+  "reset": "Reset",
+  "resetDone": "Progress reset.",
+  "about": "AlgoBot is a puzzle game that teaches kids to think like programmers. No data collected. No internet needed. Characters unlock only by playing; there are no purchases.",
+  "level57n01Title": "Hello!",
+  "level57n01Intro": "Tap the arrow card, then press the green button!",
+  "level57n02Title": "Going Down",
+  "level57n02Intro": "This time you need to go down.",
+  "level57n03Title": "The Corner",
+  "level57n03Intro": "First right, then down!",
+  "level57n04Title": "Climb Up",
+  "level57n04Intro": "Go around the wall.",
+  "level57n05Title": "Treasure",
+  "level57n05Intro": "Can you grab the treasure too?",
+  "level57n06Title": "Snake Path",
+  "level57n06Intro": "Trace the path with your finger.",
+  "level57n07Title": "Two Treasures",
+  "level57n07Intro": "Go to the goal last!",
+  "level57n08Title": "Big Factory",
+  "level57n08Intro": "The treasure is a bit far. Get it first, then come back.",
+  "level812n01Title": "First Step",
+  "level812n01Intro": "Drag the Forward card into the strip below, then press Run.",
+  "level812n02Title": "Right Turn",
+  "level812n02Intro": "A turn card spins you in place. It doesn't move you forward.",
+  "level812n03Title": "Left Turn",
+  "level812n03Intro": "Right and left depend on which way you are facing.",
+  "level812n04Title": "Zigzag",
+  "level812n04Intro": "Trace the path with your finger first.",
+  "level812n05Title": "Treasure or Shortcut?",
+  "level812n05Intro": "There's more than one way to the goal. Can you collect everything, too?",
+  "level812n06Title": "Wrong Way",
+  "level812n06Intro": "Which way are you facing? Turn around first.",
+  "level812n07Title": "Limited Cards",
+  "level812n07Intro": "You only have room for 10 cards. Make every card count.",
+  "level812n08Title": "Factory Exit",
+  "level812n08Intro": "A long way! Did you notice you keep repeating the same moves?",
+  "level13n01Title": "The Big Maze",
+  "level13n01Intro": "The map got bigger. Watch out for dead ends!",
+  "level13n02Title": "Fork in the Road",
+  "level13n02Intro": "Grabbing the closest one first isn't always the shortest way.",
+  "level13n03Title": "Locked Door",
+  "level13n03Intro": "Doors won't open without a key. Where is it?",
+  "level13n04Title": "Key Hunt",
+  "level13n04Intro": "Sometimes you have to turn back. Find the key first.",
+  "level13n05Title": "Slippery Floor",
+  "level13n05Intro": "It's hard to stop on ice: you slide until something blocks you.",
+  "level13n06Title": "Ice Skating",
+  "level13n06Intro": "Ice is fast, but will it let you collect everything?",
+  "level13n07Title": "Teleport!",
+  "level13n07Intro": "Step into a portal and you pop out of the other one, facing the same way.",
+  "level13n08Title": "The Final",
+  "level13n08Intro": "Keys, ice and portals all at once. You have exactly enough cards!"
+}
