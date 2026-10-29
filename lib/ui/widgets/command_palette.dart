@@ -15,21 +15,15 @@ class CommandPalette extends StatelessWidget {
   const CommandPalette({
     super.key,
     required this.game,
-    this.tutorialKey,
-    this.tutorialCommand,
-    this.tutorialRepeat = false,
+    this.cardKeys = const {},
+    this.repeatKey,
   });
 
   final GameController game;
 
-  /// Eğitimdeki parmak animasyonunun işaret ettiği kartın anahtarı.
-  final GlobalKey? tutorialKey;
-
-  /// Anahtarın bağlanacağı komut; kart konumu komut türüne göre bulunur.
-  final Command? tutorialCommand;
-
-  /// Eğitim parmağı Tekrarla kartını gösterir (Dünya 2'nin ilk seviyesi).
-  final bool tutorialRepeat;
+  /// Kartların kararlı anahtarları (tanıtım parmağı ve eğitim vurguları).
+  final Map<Command, GlobalKey> cardKeys;
+  final GlobalKey? repeatKey;
 
   @override
   Widget build(BuildContext context) {
@@ -66,18 +60,14 @@ class CommandPalette extends StatelessWidget {
                   children: [
                     for (final command in commands)
                       _PaletteCard(
-                        key:
-                            !tutorialRepeat &&
-                                command == (tutorialCommand ?? commands.first)
-                            ? tutorialKey
-                            : null,
+                        key: cardKeys[command],
                         command: command,
                         size: size,
                         onTap: () => game.addCommand(command),
                       ),
                     if (game.level.allowsLoops)
                       _RepeatCard(
-                        key: tutorialRepeat ? tutorialKey : null,
+                        key: repeatKey,
                         size: size,
                         onTap: () => game.addRepeat(),
                       ),
@@ -121,9 +111,27 @@ class _PaletteCard extends StatelessWidget {
           opacity: 0.5,
           child: CommandCard(command: command, size: size),
         ),
-        child: GestureDetector(
-          onTap: onTap,
-          child: CommandCard(command: command, size: size),
+        // Basılı tutmak kartı eklemez; ne yaptığını anlatan balon açar.
+        child: Tooltip(
+          message: l.commandHelp(command),
+          triggerMode: TooltipTriggerMode.longPress,
+          showDuration: const Duration(milliseconds: 2500),
+          preferBelow: false,
+          verticalOffset: size * 0.6,
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: BoxDecoration(
+            color: AppColors.textPrimary,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          textStyle: const TextStyle(
+            color: AppColors.background,
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+          ),
+          child: GestureDetector(
+            onTap: onTap,
+            child: CommandCard(command: command, size: size),
+          ),
         ),
       ),
     );

@@ -21,7 +21,7 @@ For _fastlane_ installation instructions, see [Installing _fastlane_](https://do
 [bundle exec] fastlane android prepare_version
 ```
 
-Prepare next version (Patch / Minor / Major)
+Prepare next shared version (Patch / Minor / Major)
 
 ### android build
 
@@ -31,13 +31,29 @@ Prepare next version (Patch / Minor / Major)
 
 Build Flutter Android App Bundle
 
+### android check_release
+
+```sh
+[bundle exec] fastlane android check_release
+```
+
+Validate Android release metadata
+
+### android upload
+
+```sh
+[bundle exec] fastlane android upload
+```
+
+Upload existing AAB to Google Play Production
+
 ### android release
 
 ```sh
 [bundle exec] fastlane android release
 ```
 
-Prepare and release current version
+Build and upload current shared version
 
 ### android retry_release
 
@@ -45,7 +61,7 @@ Prepare and release current version
 [bundle exec] fastlane android retry_release
 ```
 
-Retry current version without bumping versionCode
+Retry uploading existing AAB without rebuilding
 
 ----
 

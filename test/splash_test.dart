@@ -22,6 +22,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'helpers/fake_review.dart';
 import 'helpers/test_db.dart';
+import 'helpers/tutorial_prefs.dart';
 
 /// Gerçekten çalmadan çalınan sesleri kaydeden sahte ses servisi.
 class FakeSoundService extends SoundService {
@@ -58,6 +59,7 @@ Future<_Splash> _boot(
     'sound_on': soundOn,
     'age_group': ?age,
     ProgressRepository.migratedKey: true,
+    ...seenTutorialPrefs,
   });
   final prefs = await SharedPreferences.getInstance();
   final settings = SettingsController(prefs);

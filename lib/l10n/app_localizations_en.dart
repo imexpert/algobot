@@ -171,6 +171,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cmdMoveRight => 'Right';
 
   @override
+  String get cardHelpForward => 'Move 1 square the way you\'re facing';
+
+  @override
+  String get cardHelpTurnRight => 'Turn right on the spot';
+
+  @override
+  String get cardHelpTurnLeft => 'Turn left on the spot';
+
+  @override
+  String get cardHelpUp => 'Move 1 square up';
+
+  @override
+  String get cardHelpDown => 'Move 1 square down';
+
+  @override
+  String get cardHelpMoveLeft => 'Move 1 square left';
+
+  @override
+  String get cardHelpMoveRight => 'Move 1 square right';
+
+  @override
   String paletteCardLabel(String command) {
     return '$command card';
   }
@@ -835,4 +856,193 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get maxRepeat => 'Up to ×5';
+
+  @override
+  String get howToPlay => 'How to play';
+
+  @override
+  String get tutTitle => 'Tutorial';
+
+  @override
+  String get tutSkip => 'Skip';
+
+  @override
+  String get tutSkipConfirm =>
+      'Skip the tutorial? You can watch it again any time from the home screen.';
+
+  @override
+  String get tutHelpConfirm =>
+      'Start the tutorial? Your program on this level won\'t be lost.';
+
+  @override
+  String get tutHelpStart => 'Start tutorial';
+
+  @override
+  String get tutHelpMechanic => 'This level\'s intro';
+
+  @override
+  String get tutNext => 'Next ›';
+
+  @override
+  String get tutStart => 'Start';
+
+  @override
+  String get tutGotIt => 'Got it';
+
+  @override
+  String get tutProgressLabel => 'Tutorial progress';
+
+  @override
+  String tutWrongCard(String card) {
+    return 'This time, tap the $card card.';
+  }
+
+  @override
+  String get tutTryAgain => 'Almost! Try again.';
+
+  @override
+  String get tutForgot => 'You reached the goal, but you forgot something!';
+
+  @override
+  String get tutRemoveWrong => 'Tap a wrong card to remove it.';
+
+  @override
+  String get tutRel01 =>
+      'Hi! This is your character. Let\'s take it to the goal.';
+
+  @override
+  String get tutRel02 => 'This is the goal.';
+
+  @override
+  String get tutRel03 =>
+      'The yellow arrow shows where your character is facing. Forward moves it to this square.';
+
+  @override
+  String get tutRel04 => 'Tap the Forward card.';
+
+  @override
+  String get tutRel05 =>
+      'The card is in your program! Your character will do the cards in order.';
+
+  @override
+  String get tutRel06 => 'The goal is 2 squares away. Add one more Forward.';
+
+  @override
+  String get tutRel07 => 'Now tap Run and watch!';
+
+  @override
+  String get tutRel08 => 'Great! You wrote your first program.';
+
+  @override
+  String get tutRel09 =>
+      'This time the goal is below. Your character is facing right.';
+
+  @override
+  String get tutRel10 => 'First, move one square forward.';
+
+  @override
+  String get tutRel11 =>
+      'Now tap the Right card. It doesn\'t walk, it only turns your character on the spot.';
+
+  @override
+  String get tutRel12 =>
+      'After the turn, the arrow will point down. Add one more Forward.';
+
+  @override
+  String get tutRel13 => 'Tap Run. Watch the arrow as it turns!';
+
+  @override
+  String get tutRel14 =>
+      'Right and left depend on where your character is facing. If you\'re not sure, press and hold a card to see what it does.';
+
+  @override
+  String get tutRel15 =>
+      'To remove a wrong card, tap it in your program. Try it now: remove a card.';
+
+  @override
+  String get tutRel16 => 'Your turn! Solve this path on your own.';
+
+  @override
+  String tutRel17(String id) {
+    String _temp0 = intl.Intl.selectLogic(id, {
+      'bip': 'a battery',
+      'pati': 'a fish',
+      'vizviz': 'a honey drop',
+      'buzi': 'an ice crystal',
+      'tosbi': 'a strawberry',
+      'hop': 'a carrot',
+      'zorp': 'a star',
+      'kivilcim': 'a coin',
+      'other': 'a treasure',
+    });
+    return 'This is $_temp0. Collect it to earn more stars.';
+  }
+
+  @override
+  String get tutRel18 =>
+      '1 star: reach the goal. 2 stars: collect everything. 3 stars: use the fewest cards.';
+
+  @override
+  String get tutRel19 => 'Collect it and reach the goal!';
+
+  @override
+  String get tutRel20 =>
+      'You have 3 lives. If your program misses the goal, you lose 1. Lives come back over time.';
+
+  @override
+  String get tutRel21 =>
+      'Stuck? Jokers can help: skip the level or get a life.';
+
+  @override
+  String get tutRel21Video =>
+      'Stuck? Jokers can help: skip the level, get a life or watch a video.';
+
+  @override
+  String get tutRel22 => 'You\'re ready! Let\'s go to the first level.';
+
+  @override
+  String get tutAbs01 => 'This is your friend!';
+
+  @override
+  String get tutAbs02 => 'Let\'s take it here.';
+
+  @override
+  String get tutAbs03 => 'Tap the right arrow.';
+
+  @override
+  String get tutAbs04 => 'One more time!';
+
+  @override
+  String get tutAbs05 => 'Press the green button!';
+
+  @override
+  String get tutAbs06 => 'Super!';
+
+  @override
+  String get tutAbs07 => 'Now right, then down.';
+
+  @override
+  String get tutAbs08 => 'To remove a wrong card, tap it.';
+
+  @override
+  String get tutAbs09 => 'Grab the treasure too!';
+
+  @override
+  String get tutAbs10 => 'You have 3 hearts. A mistake costs one heart.';
+
+  @override
+  String get tutAbs11 => 'You\'re ready!';
+
+  @override
+  String get tutMechIce => 'On ice, you slide until something stops you.';
+
+  @override
+  String get tutMechDoor => 'Pick up the key and the door opens.';
+
+  @override
+  String get tutMechPortal =>
+      'Step into one portal and you come out of the other, facing the same way.';
+
+  @override
+  String get tutMechWatch => 'Watch! Tap Got it when you\'re ready.';
 }

@@ -22,6 +22,7 @@ import 'package:algobot/ui/screens/home_screen.dart';
 import 'package:algobot/ui/screens/level_select_screen.dart';
 import 'package:algobot/ui/widgets/command_card.dart';
 import 'package:algobot/ui/widgets/command_palette.dart';
+import 'package:algobot/ui/widgets/hint_bubble.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -29,6 +30,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'helpers/fake_review.dart';
 import 'helpers/test_db.dart';
+import 'helpers/tutorial_prefs.dart';
 
 final en = lookupAppLocalizations(const Locale('en'));
 final tr = lookupAppLocalizations(const Locale('tr'));
@@ -79,6 +81,7 @@ Future<_App> _setUp(
     'sound_on': false,
     'age_group': ?age?.name,
     ProgressRepository.migratedKey: true,
+    ...seenTutorialPrefs,
     ...prefs,
   });
   final sp = await SharedPreferences.getInstance();
@@ -314,17 +317,10 @@ void main() {
     testWidgets('Seviye 1 eğitimi İleri kartını işaret eder', (tester) async {
       await _setUp(tester);
       await _openLevel(tester, _lvl(AgeGroup.ages8to12, 1));
-      final keyed = tester
-          .widgetList<Widget>(
-            find.descendant(
-              of: find.byType(CommandPalette),
-              matching: find.byWidgetPredicate((w) => w.key is GlobalKey),
-            ),
-          )
-          .single;
+      final finger = tester.widget<TutorialFinger>(find.byType(TutorialFinger));
       expect(
         find.descendant(
-          of: find.byWidget(keyed),
+          of: find.byKey(finger.fromKey),
           matching: find.byWidgetPredicate(
             (w) => w is CommandCard && w.command == Command.forward,
           ),

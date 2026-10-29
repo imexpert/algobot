@@ -8,6 +8,7 @@ import 'app_localizations.dart';
 
 export 'app_localizations.dart';
 export 'level_texts.dart';
+export 'tutorial_texts.dart';
 
 /// Desteklenen diller: telefon Türkçe ise Türkçe, diğer her dilde İngilizce.
 const supportedAppLocales = [Locale('en'), Locale('tr')];
@@ -29,6 +30,17 @@ extension L10nHelpers on AppLocalizations {
     Command.moveDown => cmdDown,
     Command.moveLeft => cmdMoveLeft,
     Command.moveRight => cmdMoveRight,
+  };
+
+  /// Palette basılı tutunca görünen açıklama.
+  String commandHelp(Command c) => switch (c) {
+    Command.forward => cardHelpForward,
+    Command.turnRight => cardHelpTurnRight,
+    Command.turnLeft => cardHelpTurnLeft,
+    Command.moveUp => cardHelpUp,
+    Command.moveDown => cardHelpDown,
+    Command.moveLeft => cardHelpMoveLeft,
+    Command.moveRight => cardHelpMoveRight,
   };
 
   String commandLong(Command c) => switch (c) {

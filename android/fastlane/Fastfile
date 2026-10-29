@@ -1,36 +1,24 @@
+
 require "fileutils"
+require "shellwords"
+require "open3"
 
 default_platform(:android)
 
-# --------------------------------------------------
-# Paths
-# --------------------------------------------------
-
 ROOT_DIR = File.expand_path("../..", __dir__)
-
-NOTES_ROOT = File.join(
-  ROOT_DIR,
-  "release-notes"
-)
-
-METADATA_PATH = File.join(
-  __dir__,
-  "metadata",
-  "android"
-)
+NOTES_ROOT = File.join(ROOT_DIR, "release-notes")
+METADATA_PATH = File.join(__dir__, "metadata", "android")
 
 AAB_PATH = File.join(
   ROOT_DIR,
   "build/app/outputs/bundle/release/app-release.aab"
 )
 
-# --------------------------------------------------
-# Read current version from pubspec.yaml
-# Example: 1.1.3+5
-# --------------------------------------------------
-
+# Shared Flutter version
 def algobot_version
   pubspec = File.join(ROOT_DIR, "pubspec.yaml")
+
+  UI.user_error!("pubspec.yaml not found!") unless File.file?(pubspec)
 
   line = File.readlines(pubspec).find do |item|
     item.match?(/^version:\s*/)
@@ -47,10 +35,7 @@ def algobot_version
   version
 end
 
-# --------------------------------------------------
-# Read release notes for current version
-# --------------------------------------------------
-
+# Shared Turkish and English release notes
 def algobot_notes(version)
   directory = File.join(NOTES_ROOT, version)
   notes = {}
@@ -58,19 +43,12 @@ def algobot_notes(version)
   ["tr-TR", "en-US"].each do |locale|
     path = File.join(directory, "#{locale}.txt")
 
-    unless File.file?(path)
-      UI.user_error!("Missing release notes: #{path}")
-    end
+    UI.user_error!("Missing release notes: #{path}") unless File.file?(path)
 
     content = File.read(path, encoding: "UTF-8").strip
 
-    if content.empty?
-      UI.user_error!("#{locale}: Release notes cannot be empty!")
-    end
-
-    if content.length > 500
-      UI.user_error!("#{locale}: Maximum 500 characters!")
-    end
+    UI.user_error!("#{locale}: Release notes cannot be empty!") if content.empty?
+    UI.user_error!("#{locale}: Maximum 500 characters!") if content.length > 500
 
     notes[locale] = content
   end
@@ -78,10 +56,7 @@ def algobot_notes(version)
   notes
 end
 
-# --------------------------------------------------
-# Prepare Google Play changelogs
-# --------------------------------------------------
-
+# Prepare Google Play release notes
 def algobot_prepare_changelogs(version, notes)
   version_code = version.split("+").last
 
@@ -102,19 +77,62 @@ def algobot_prepare_changelogs(version, notes)
   end
 end
 
-# --------------------------------------------------
-# Android lanes
-# --------------------------------------------------
+# Read an attribute from the actual Android App Bundle
+def algobot_aab_attribute(attribute)
+  UI.user_error!("AAB not found: #{AAB_PATH}") unless File.file?(AAB_PATH)
+
+  bundletool = `command -v bundletool`.strip
+
+  UI.user_error!(
+    "bundletool is required. Install it with: brew install bundletool"
+  ) if bundletool.empty?
+
+  command = [
+    bundletool,
+    "dump",
+    "manifest",
+    "--bundle=#{AAB_PATH}",
+    "--xpath=/manifest/@android:#{attribute}"
+  ]
+
+  output, error, status = Open3.capture3(*command)
+
+  unless status.success?
+    UI.user_error!(
+      "bundletool failed reading #{attribute}: #{error}"
+    )
+  end
+
+  output.strip
+end
+
+# Enforce versionName and versionCode consistency
+def algobot_verify_aab
+  expected_version = algobot_version
+  expected_name, expected_code = expected_version.split("+")
+
+  actual_name = algobot_aab_attribute("versionName")
+  actual_code = algobot_aab_attribute("versionCode")
+
+  unless actual_name == expected_name
+    UI.user_error!(
+      "AAB versionName mismatch! Expected #{expected_name}, got #{actual_name}"
+    )
+  end
+
+  unless actual_code == expected_code
+    UI.user_error!(
+      "AAB versionCode mismatch! Expected #{expected_code}, got #{actual_code}"
+    )
+  end
+
+  UI.success("Android AAB version verified: #{expected_version}")
+end
 
 platform :android do
 
-  # ------------------------------------------------
-  # Prepare next version
-  # ------------------------------------------------
-
-  desc "Prepare next version (Patch / Minor / Major)"
+  desc "Prepare next shared version (Patch / Minor / Major)"
   lane :prepare_version do
-
     current_version = algobot_version
 
     UI.header("AlgoBot Version Preparation")
@@ -131,11 +149,7 @@ platform :android do
       "Major" => "3"
     }.fetch(choice)
 
-    confirmed = UI.confirm(
-      "Update version using #{choice}?"
-    )
-
-    unless confirmed
+    unless UI.confirm("Update version using #{choice}?")
       UI.message("Version preparation cancelled.")
       next
     end
@@ -144,37 +158,54 @@ platform :android do
       sh("bash scripts/bump_version.sh #{release_type}")
     end
 
-    UI.success("New version: #{algobot_version}")
-    UI.message(
-      "Create release notes before running the release lane."
-    )
+    UI.success("New shared version: #{algobot_version}")
+    UI.message("Prepare release notes and iOS promotional texts.")
   end
-
-  # ------------------------------------------------
-  # Build Flutter AAB
-  # ------------------------------------------------
 
   desc "Build Flutter Android App Bundle"
   lane :build do
-
     Dir.chdir(ROOT_DIR) do
       sh("flutter pub get")
       sh("flutter build appbundle --release")
     end
 
-    unless File.file?(AAB_PATH)
-      UI.user_error!("AAB file not found!")
-    end
+    algobot_verify_aab
 
     UI.success("Android AAB build completed!")
   end
 
-  # ------------------------------------------------
-  # Upload to Google Play Production
-  # ------------------------------------------------
+  desc "Validate Android release metadata"
+  lane :check_release do
+    version = algobot_version
+    notes = algobot_notes(version)
 
-  desc "Submit prepared version to Google Play Production"
-  private_lane :submit_production do
+    UI.header("AlgoBot Android Release Validation")
+    UI.message("Version: #{version}")
+
+    notes.each do |locale, content|
+      UI.message("#{locale}: #{content}")
+    end
+
+    UI.success("Android release metadata validated!")
+  end
+
+  desc "Upload existing AAB to Google Play Production"
+  lane :upload do
+    version = algobot_version
+    notes = algobot_notes(version)
+
+    algobot_verify_aab
+    algobot_prepare_changelogs(version, notes)
+
+    UI.header("AlgoBot Google Play Upload")
+    UI.message("Version: #{version}")
+    UI.message("Track: production")
+    UI.message("AAB: #{AAB_PATH}")
+
+    unless UI.confirm("Upload this AAB to Google Play Production?")
+      UI.message("Android upload cancelled.")
+      next
+    end
 
     upload_to_play_store(
       track: "production",
@@ -188,56 +219,20 @@ platform :android do
       changes_not_sent_for_review: false
     )
 
-    UI.success("AlgoBot Production release submitted!")
+    UI.success("AlgoBot Android Production upload completed!")
   end
 
-  # ------------------------------------------------
-  # Release current version
-  # ------------------------------------------------
-
-  desc "Prepare and release current version"
+  desc "Build and upload current shared version"
   lane :release do
-
-    version = algobot_version
-    notes = algobot_notes(version)
-
-    UI.header("AlgoBot Release Automation")
-    UI.message("Version: #{version}")
-
-    notes.each do |locale, content|
-      UI.message("#{locale}: #{content}")
-    end
-
-    algobot_prepare_changelogs(version, notes)
-
-    # Build first, ask for approval afterwards
+    check_release
     build
-
-    UI.header("Final Production Approval")
-
-    UI.message("Build completed: #{version}")
-    UI.message("Track: production")
-    UI.message("Release status: completed")
-
-    confirmed = UI.confirm(
-      "All preparations completed. Publish to Google Play Production?"
-    )
-
-    unless confirmed
-      UI.message("Production upload cancelled.")
-      next
-    end
-
-    submit_production
+    upload
   end
 
-  # ------------------------------------------------
-  # Retry current version without version bump
-  # ------------------------------------------------
-
-  desc "Retry current version without bumping versionCode"
+  desc "Retry uploading existing AAB without rebuilding"
   lane :retry_release do
-    release
+    upload
   end
 
 end
+

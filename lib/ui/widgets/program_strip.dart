@@ -407,7 +407,14 @@ class _StripCardState extends State<_StripCard> with TickerProviderStateMixin {
     if (_removing || widget.locked) return;
     _removing = true;
     await _scale.animateTo(0, curve: Curves.easeIn);
-    if (mounted) widget.onRemove();
+    if (!mounted) return;
+    widget.onRemove();
+    // Silme reddedildiyse (ör. eğitim adımı) kart geri görünür.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _removing = false;
+      _scale.value = 1;
+    });
   }
 
   @override

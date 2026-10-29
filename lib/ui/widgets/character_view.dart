@@ -115,14 +115,10 @@ class _CharacterViewPainter extends CustomPainter {
     final side = size.shortestSide;
     final box = Size.square(side * 0.9);
     final origin = size.center(Offset.zero);
-    if (showDisc) {
-      paintBaseDisc(
-        canvas,
-        origin + Offset(0, side * 0.08),
-        side,
-        facing.index.toDouble(),
-      );
-    }
+    // Disk ve ok alana sığsın: ok ucu disk merkezinden `cell / 2` uzakta.
+    final cell = side * 0.82;
+    final discCenter = origin + Offset(0, side * 0.08);
+    if (showDisc) paintBaseDisc(canvas, discCenter, cell);
     if (silhouette) {
       canvas.saveLayer(
         Offset.zero & size,
@@ -137,6 +133,16 @@ class _CharacterViewPainter extends CustomPainter {
     canvas.translate(origin.dx - box.width / 2, origin.dy - box.height / 2);
     character.painter.paint(canvas, box, facing, state, t);
     canvas.restore();
+    // Yön oku karakterin üstünde (z sırasında en önde).
+    if (showDisc && !silhouette) {
+      paintDirectionArrow(
+        canvas,
+        discCenter,
+        cell,
+        facing.index.toDouble(),
+        nudge: arrowPulse(s),
+      );
+    }
     if (silhouette) canvas.restore();
   }
 

@@ -9,9 +9,13 @@ import 'board_painter.dart';
 
 /// Izgarayı mevcut alana sığacak şekilde ölçekler; kare üst sınırı yaşa göre.
 class BoardView extends StatefulWidget {
-  const BoardView({super.key, required this.game});
+  const BoardView({super.key, required this.game, this.paintKey});
 
   final GameController game;
+
+  /// Tahta çiziminin anahtarı: eğitimde kare konumları buradan hesaplanır
+  /// (bkz. [boardCellRect]).
+  final GlobalKey? paintKey;
 
   @override
   State<BoardView> createState() => _BoardViewState();
@@ -56,6 +60,7 @@ class _BoardViewState extends State<BoardView>
             label: context.l10n.board,
             image: true,
             child: CustomPaint(
+              key: widget.paintKey,
               size: size,
               painter: BoardPainter(
                 game: widget.game,
@@ -68,4 +73,20 @@ class _BoardViewState extends State<BoardView>
       },
     );
   }
+}
+
+/// Tahtadaki bir karenin genel (ekran) koordinatlarındaki dikdörtgeni.
+/// [paintKey] tahta çiziminin anahtarıdır; tahta çizilmemişse null.
+Rect? boardCellRect(GlobalKey paintKey, int width, int height, Point<int> p) {
+  final box = paintKey.currentContext?.findRenderObject() as RenderBox?;
+  if (box == null || !box.hasSize || !box.attached) return null;
+  const gap = BoardPainter.gap;
+  final cell = (box.size.width - gap * (width - 1)) / width;
+  final origin = box.localToGlobal(Offset.zero);
+  return Rect.fromLTWH(
+    origin.dx + p.x * (cell + gap),
+    origin.dy + p.y * (cell + gap),
+    cell,
+    cell,
+  );
 }

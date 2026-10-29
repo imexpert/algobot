@@ -43,3 +43,16 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Apple Fastlane API configuration
+/ios/fastlane/.env
+
+# iOS Fastlane local dependencies
+/ios/vendor/bundle/
+
+# Android Fastlane local dependencies
+/android/vendor/bundle/
+/android/.bundle/
+
+# Root Bundler local configuration
+/.bundle/

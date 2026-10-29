@@ -1,0 +1,196 @@
+
+require "fileutils"
+require "shellwords"
+
+default_platform(:ios)
+
+ROOT_DIR = File.expand_path("../..", __dir__)
+NOTES_ROOT = File.join(ROOT_DIR, "release-notes")
+IPA_PATH = File.join(ROOT_DIR, "build/ios/ipa/AlgoBot.ipa")
+
+APP_IDENTIFIER = "com.fabsora.algobot"
+LOCALES = ["tr-TR", "en-US"].freeze
+
+def algobot_version
+  pubspec = File.join(ROOT_DIR, "pubspec.yaml")
+  UI.user_error!("pubspec.yaml not found") unless File.file?(pubspec)
+
+  line = File.readlines(pubspec).find { |item| item.match?(/^version:\s*/) }
+  UI.user_error!("Version not found") unless line
+
+  version = line.split(":", 2).last.strip
+
+  unless version.match?(/\A\d+\.\d+\.\d+\+\d+\z/)
+    UI.user_error!("Invalid version: #{version}")
+  end
+
+  version
+end
+
+def algobot_release_data
+  full_version = algobot_version
+  marketing_version, build_number = full_version.split("+")
+  directory = File.join(NOTES_ROOT, full_version)
+
+  UI.user_error!("Release directory not found: #{directory}") unless Dir.exist?(directory)
+
+  notes = {}
+  promotional = {}
+
+  LOCALES.each do |locale|
+    notes_path = File.join(directory, "#{locale}.txt")
+    promotional_path = File.join(directory, "promotional-#{locale}.txt")
+
+    UI.user_error!("Missing file: #{notes_path}") unless File.file?(notes_path)
+    UI.user_error!("Missing file: #{promotional_path}") unless File.file?(promotional_path)
+
+    notes_text = File.read(notes_path, encoding: "UTF-8").strip
+    promotional_text = File.read(promotional_path, encoding: "UTF-8").strip
+
+    UI.user_error!("Empty release notes: #{locale}") if notes_text.empty?
+    UI.user_error!("Empty promotional text: #{locale}") if promotional_text.empty?
+
+    UI.user_error!("Release notes exceed 4000 characters: #{locale}") if notes_text.length > 4000
+    UI.user_error!("Promotional text exceeds 170 characters: #{locale}") if promotional_text.length > 170
+
+    notes[locale] = notes_text
+    promotional[locale] = promotional_text
+  end
+
+  {
+    full_version: full_version,
+    marketing_version: marketing_version,
+    build_number: build_number,
+    notes: notes,
+    promotional: promotional
+  }
+end
+
+def algobot_api_key
+  key_id = ENV["APP_STORE_CONNECT_API_KEY_ID"]
+  issuer_id = ENV["APP_STORE_CONNECT_API_ISSUER_ID"]
+  key_path = ENV["APP_STORE_CONNECT_API_KEY_PATH"]
+
+  UI.user_error!("Missing API Key ID") if key_id.to_s.empty?
+  UI.user_error!("Missing Issuer ID") if issuer_id.to_s.empty?
+  UI.user_error!("Missing API key path") if key_path.to_s.empty?
+  UI.user_error!("API key file not found") unless File.file?(key_path)
+
+  app_store_connect_api_key(
+    key_id: key_id,
+    issuer_id: issuer_id,
+    key_filepath: key_path,
+    duration: 1200,
+    in_house: false
+  )
+end
+
+def algobot_prepare_metadata(data)
+  metadata_dir = File.join(ROOT_DIR, "build", "fastlane", "ios-metadata")
+
+  FileUtils.rm_rf(metadata_dir)
+  FileUtils.mkdir_p(metadata_dir)
+
+  LOCALES.each do |locale|
+    locale_dir = File.join(metadata_dir, locale == "tr-TR" ? "tr" : locale)
+    FileUtils.mkdir_p(locale_dir)
+
+    File.write(
+      File.join(locale_dir, "release_notes.txt"),
+      data[:notes][locale]
+    )
+
+    File.write(
+      File.join(locale_dir, "promotional_text.txt"),
+      data[:promotional][locale]
+    )
+  end
+
+  metadata_dir
+end
+
+platform :ios do
+  desc "Validate local Apple API key configuration"
+  lane :check_auth do
+    algobot_api_key
+    UI.success("Apple API key loaded successfully!")
+  end
+
+  desc "Validate version and localized release metadata"
+  lane :check_release do
+    data = algobot_release_data
+
+    UI.header("AlgoBot iOS Release Validation")
+    UI.message("Version: #{data[:marketing_version]}")
+    UI.message("Build: #{data[:build_number]}")
+
+    LOCALES.each do |locale|
+      UI.message("#{locale} What's New: #{data[:notes][locale]}")
+      UI.message("#{locale} Promotional Text: #{data[:promotional][locale]}")
+    end
+
+    UI.success("Release metadata validated!")
+  end
+
+  desc "Build Flutter IPA"
+  lane :build do
+    Dir.chdir(ROOT_DIR) do
+      sh("flutter pub get")
+      sh("flutter build ipa --release")
+    end
+
+    UI.user_error!("IPA file not found: #{IPA_PATH}") unless File.file?(IPA_PATH)
+
+    UI.success("IPA build completed: #{IPA_PATH}")
+  end
+
+  desc "Upload existing IPA and localized metadata to App Store Connect"
+  lane :upload do
+    data = algobot_release_data
+
+    UI.user_error!("IPA file not found: #{IPA_PATH}") unless File.file?(IPA_PATH)
+
+    api_key = algobot_api_key
+    metadata_dir = algobot_prepare_metadata(data)
+
+    UI.header("AlgoBot App Store Connect Upload")
+    UI.message("Version: #{data[:full_version]}")
+    UI.message("IPA: #{IPA_PATH}")
+    UI.message("Languages: #{LOCALES.join(', ')}")
+
+    unless UI.confirm("Upload IPA and metadata to App Store Connect?")
+      UI.message("Upload cancelled.")
+      next
+    end
+
+    upload_to_app_store(
+      api_key: api_key,
+      app_identifier: APP_IDENTIFIER,
+      ipa: IPA_PATH,
+      app_version: data[:marketing_version],
+      metadata_path: metadata_dir,
+      skip_metadata: false,
+      skip_screenshots: true,
+      submit_for_review: false,
+      automatic_release: false,
+      force: true,
+      run_precheck_before_submit: false
+    )
+
+    UI.success("Upload operation completed!")
+    UI.message("App Review submission is a separate step.")
+  end
+
+  desc "Build and upload AlgoBot to App Store Connect"
+  lane :release do
+    check_release
+    build
+    upload
+  end
+
+  desc "Retry upload using existing IPA"
+  lane :retry_release do
+    upload
+  end
+end
+

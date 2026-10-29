@@ -2,29 +2,28 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../audio/sound_service.dart';
-import '../../characters/character_painter.dart';
 import '../../characters/character_registry.dart';
 import '../../core/colors.dart';
 import '../../data/session_repository.dart';
 import '../../jokers/joker_type.dart';
 import '../../l10n/l10n.dart';
-import '../../models/age_group.dart';
+import '../../models/age_config.dart';
 import '../../models/level.dart';
 import '../../review/review_service.dart';
 import '../../rewards/rewarded_video_service.dart';
 import '../../state/game_controller.dart';
 import '../../state/progress_controller.dart';
 import '../../state/settings_controller.dart';
-import '../widgets/app_button.dart';
-import '../widgets/board_view.dart';
-import '../widgets/character_view.dart';
-import '../widgets/command_palette.dart';
+import '../../tutorial/mechanic_intro.dart';
+import '../../tutorial/tutorial_controller.dart';
+import '../../tutorial/tutorial_scripts.dart';
+import '../tutorial/tutorial_screen.dart';
+import '../widgets/game_layout.dart';
 import '../widgets/hint_bubble.dart';
 import '../widgets/joker_bar.dart';
 import '../widgets/lives_indicator.dart';
 import '../widgets/new_friend_dialog.dart';
 import '../widgets/out_of_lives_sheet.dart';
-import '../widgets/program_strip.dart';
 import '../widgets/parent_gate_dialog.dart';
 import '../widgets/result_sheet.dart';
 import '../widgets/review_prompt_dialog.dart';
@@ -42,9 +41,7 @@ class GameScreen extends StatefulWidget {
 class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   late final GameController _game;
 
-  final _paletteKey = GlobalKey();
-  final _stripKey = GlobalKey();
-  final _runKey = GlobalKey();
+  final _keys = GameKeys();
 
   /// Bu seviye oturumu başladığında toplam yıldız (yeni karakter tespiti).
   late int _starsBefore;
@@ -56,16 +53,22 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   void initState() {
     super.initState();
     final progress = context.read<ProgressController>();
+    final settings = context.read<SettingsController>();
     _game =
         GameController(
             level: widget.level,
-            character: CharacterRegistry.byId(
-              context.read<SettingsController>().characterId,
-            ),
+            character: CharacterRegistry.byId(settings.characterId),
             vsync: this,
             sound: context.read<SoundService>(),
             progress: progress,
             sessions: context.read<SessionRepository>(),
+            // Eğitim tamamlandıysa Seviye 1–2 parmak tanıtımı tekrarlanmaz
+            // (atlandıysa gösterilir).
+            suppressLevelTutorial:
+                settings.tutorialStatus(
+                  widget.level.ageGroup.settings.commandFamily,
+                ) ==
+                TutorialStatus.completed,
           )
           ..onSuccess = _showResult
           ..onOutOfLives = _showOutOfLives
@@ -76,11 +79,97 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     }
     _starsBefore = progress.totalStarsAll;
     _threeStarsBefore = progress.threeStarCount;
+    // 13+: mekaniğin ilk göründüğü seviyede, başlamadan kısa tanıtım.
+    final mechanic = _mechanic;
+    if (mechanic != null &&
+        !_game.outOfLives &&
+        !settings.mechanicIntroSeen(mechanic)) {
+      _startIntro();
+    }
+  }
+
+  /// Bu seviye bir 13+ mekaniğini tanıtıyorsa adı (`ice`, `door`, `portal`).
+  late final String? _mechanic = mechanicIntroFor(widget.level);
+
+  /// Mekanik tanıtımı (oyun ekranının üstünde, seviyenin kendi tahtasında).
+  TutorialController? _intro;
+
+  void _startIntro() {
+    if (_game.isRunning) _game.stop();
+    _game.dismissIntro();
+    final intro = TutorialController(
+      steps: mechanicIntros[_mechanic]!,
+      onFinished: _endIntro,
+    )..attach(_game);
+    _intro = intro;
+  }
+
+  void _endIntro() {
+    final intro = _intro;
+    if (intro == null) return;
+    intro.detach(_game);
+    _game.playGhost(null);
+    context.read<SettingsController>().setMechanicIntroSeen(_mechanic!);
+    setState(() => _intro = null);
+    // Katman bu kareden sonra kalkar; denetleyici sonra bırakılır.
+    WidgetsBinding.instance.addPostFrameCallback((_) => intro.dispose());
+  }
+
+  /// "?": onaydan sonra eğitim (ve 13+ tanıtım seviyesinde kısa tanıtım).
+  /// Eğitimden dönünce aynı seviye ve aynı program şeridi korunur.
+  Future<void> _help() async {
+    if (_game.isRunning) _game.stop();
+    final l = context.l10n;
+    final choice = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.panel,
+        content: Text(
+          l.tutHelpConfirm,
+          style: const TextStyle(color: AppColors.textPrimary, fontSize: 16),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              l.cancel,
+              style: const TextStyle(color: AppColors.textSecondary),
+            ),
+          ),
+          if (_mechanic != null)
+            TextButton(
+              onPressed: () => Navigator.pop(context, 'mechanic'),
+              child: Text(
+                l.tutHelpMechanic,
+                style: const TextStyle(color: AppColors.textPrimary),
+              ),
+            ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, 'tutorial'),
+            child: Text(
+              l.tutHelpStart,
+              style: const TextStyle(
+                color: AppColors.primaryButton,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+    if (!mounted) return;
+    switch (choice) {
+      case 'tutorial':
+        await openTutorial(context, widget.level.ageGroup);
+      case 'mechanic':
+        setState(_startIntro);
+    }
   }
 
   @override
   void dispose() {
     // Geri tuşu dahil: devam eden animasyon güvenle iptal edilir.
+    _intro?.dispose();
     _game.dispose();
     super.dispose();
   }
@@ -254,7 +343,9 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
         child: Center(
           child: ConstrainedBox(
             constraints: BoxConstraints(
-              maxWidth: _isWide(MediaQuery.sizeOf(context)) ? 1200 : 600,
+              maxWidth: GameLayout.isWide(MediaQuery.sizeOf(context))
+                  ? 1200
+                  : 600,
             ),
             child: ListenableBuilder(
               listenable: Listenable.merge([
@@ -265,16 +356,38 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                 children: [
                   Column(
                     children: [
-                      _TopBar(game: _game),
-                      Expanded(child: _body()),
+                      _TopBar(game: _game, onHelp: _help),
+                      Expanded(
+                        child: GameLayout(
+                          game: _game,
+                          keys: _keys,
+                          onUseJoker: _useJoker,
+                          videoAvailable: context
+                              .read<RewardedVideoService>()
+                              .isAvailable,
+                        ),
+                      ),
                     ],
                   ),
-                  if (_game.showTutorial)
+                  if (_game.showTutorial && _intro == null)
                     Positioned.fill(
                       child: TutorialFinger(
-                        fromKey: _paletteKey,
-                        toKey: _stripKey,
-                        runKey: _runKey,
+                        // Çözümün ilk kartı (8–12 Seviye 1: İleri) ya da
+                        // Dünya 2'nin ilk seviyesinde Tekrarla.
+                        fromKey: _game.tutorialPointsToRepeat
+                            ? _keys.repeat
+                            : _keys.palette[_game.tutorialCommand]!,
+                        toKey: _keys.strip,
+                        runKey: _keys.run,
+                      ),
+                    ),
+                  if (_intro case final intro?)
+                    Positioned.fill(
+                      child: TutorialOverlay(
+                        tutorial: intro,
+                        game: _game,
+                        keys: _keys,
+                        finishLabel: context.l10n.tutGotIt,
                       ),
                     ),
                 ],
@@ -285,200 +398,13 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       ),
     );
   }
-
-  /// Geniş yatay ekran (tablet, katlanabilir): tahta solda, kontroller
-  /// sağda. Android 16'da büyük ekranlarda dikey kilit yok sayılır.
-  static bool _isWide(Size size) =>
-      size.width >= 900 && size.width > size.height * 1.2;
-
-  /// Tahtanın okunabilir kalması için en küçük yüksekliği (kare ≥ 28dp).
-  double get _minBoardHeight {
-    final level = widget.level;
-    return level.height * 28 + (level.height - 1) * 3 + 24;
-  }
-
-  /// Tahta dışındaki öğelerin yaklaşık yüksekliği.
-  double _controlsHeight(double width, double textScale) {
-    final game = _game;
-    final card = game.ageSettings.cardSize;
-    final stripInner = width - 32 - 12;
-    const gap = ProgramStrip.gap;
-    final fit = ((stripInner + gap) / (ProgramStrip.minSlot + gap)).floor();
-    final cap = fit.clamp(1, ProgramStrip.maxPerRow);
-    final rows = (game.level.maxSlots / cap).ceil();
-    final perRow = (game.level.maxSlots / rows).ceil();
-    final slot = ((stripInner - gap * (perRow - 1)) / perRow).clamp(
-      0,
-      card < 48 ? 48 : card,
-    );
-    final text = 18 * textScale;
-    const jokerBar = 48 + 20.0 + 8;
-    return 12 +
-        text +
-        6 +
-        rows * (slot + gap) +
-        12 +
-        28 +
-        jokerBar +
-        card +
-        19 + // palet alanının iç boşluğu ve kenarlığı
-        12 +
-        56 +
-        12;
-  }
-
-  Widget _body() {
-    final game = _game;
-    final failed =
-        game.phase == GamePhase.crashed || game.phase == GamePhase.stoppedShort;
-    final l = context.l10n;
-    final board = Stack(
-      children: [
-        Positioned.fill(
-          child: Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: AppColors.panel,
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: BoardView(game: game),
-          ),
-        ),
-        if (game.skipping)
-          Positioned.fill(
-            child: IgnorePointer(
-              child: Center(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 12,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.background.withValues(alpha: 0.85),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(
-                        Icons.skip_next,
-                        color: AppColors.activeHighlight,
-                        size: 32,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        l.skippedLabel,
-                        style: const TextStyle(
-                          color: AppColors.textPrimary,
-                          fontSize: 24,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-        if (game.introVisible)
-          Positioned(
-            left: 12,
-            right: 12,
-            top: 8,
-            child: HintBubble(
-              text: l.levelIntro(game.level),
-              glyphs: game.level.introGlyphs,
-              collectible: game.character.collectible,
-              onClose: game.dismissIntro,
-            ),
-          ),
-      ],
-    );
-    final controls = <Widget>[
-      const SizedBox(height: 12),
-      ProgramStrip(game: game, stripKey: _stripKey),
-      _StatusLine(game: game),
-      if (failed)
-        _FailurePanel(game: game)
-      else ...[
-        JokerBar(
-          game: game,
-          onUse: _useJoker,
-          videoAvailable: context.read<RewardedVideoService>().isAvailable,
-        ),
-        const SizedBox(height: 8),
-        CommandPalette(
-          game: game,
-          tutorialKey: _paletteKey,
-          // Eğitim parmağı çözümün ilk kartını (8–12 Seviye 1: İleri)
-          // işaret eder; konum komut türüne göre bulunur.
-          tutorialCommand: game.tutorialCommand,
-          tutorialRepeat: game.tutorialPointsToRepeat,
-        ),
-        const SizedBox(height: 12),
-        _Controls(game: game, runKey: _runKey),
-      ],
-    ];
-
-    if (_isWide(MediaQuery.sizeOf(context))) {
-      return Padding(
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Expanded(child: board),
-            const SizedBox(width: 16),
-            SizedBox(
-              width: 460,
-              child: Center(
-                child: SingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: controls,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final scale = MediaQuery.textScalerOf(context).scale(16) / 16;
-        final rest = _controlsHeight(constraints.maxWidth, scale);
-        final fits = constraints.maxHeight - rest >= _minBoardHeight;
-        if (fits) {
-          return Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-            child: Column(
-              children: [
-                Expanded(child: board),
-                ...controls,
-              ],
-            ),
-          );
-        }
-        // Küçük ekran + büyük tahta: tahta sabit yükseklikte, sayfa kayar.
-        return SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-          child: Column(
-            children: [
-              SizedBox(height: _minBoardHeight, child: board),
-              ...controls,
-            ],
-          ),
-        );
-      },
-    );
-  }
 }
 
 class _TopBar extends StatelessWidget {
-  const _TopBar({required this.game});
+  const _TopBar({required this.game, required this.onHelp});
 
   final GameController game;
+  final VoidCallback onHelp;
 
   @override
   Widget build(BuildContext context) {
@@ -522,7 +448,11 @@ class _TopBar extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(width: 8),
+          IconButton(
+            tooltip: l.howToPlay,
+            icon: const Icon(Icons.help_outline, color: AppColors.textPrimary),
+            onPressed: onHelp,
+          ),
           ConstrainedBox(
             constraints: const BoxConstraints(minWidth: 44, maxWidth: 76),
             child: LivesIndicator(
@@ -530,172 +460,6 @@ class _TopBar extends StatelessWidget {
               max: game.livesMax,
               lostCount: game.lifeLostCount,
               alignment: Alignment.centerRight,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _StatusLine extends StatelessWidget {
-  const _StatusLine({required this.game});
-
-  final GameController game;
-
-  @override
-  Widget build(BuildContext context) {
-    final l = context.l10n;
-    final index = game.currentIndex;
-    final message = game.message;
-    String? text;
-    var color = AppColors.textSecondary;
-    if (message != null) {
-      text = l.gameMessage(message);
-      color = switch (message) {
-        GameMessage.lastLife || GameMessage.videoFailed => AppColors.warning,
-        _ => AppColors.activeHighlight,
-      };
-    } else if (index != null && game.currentStep != null) {
-      final step = game.currentStep!;
-      final command = l.commandLong(step.command);
-      // Döngü ya da çarpanlı kartta tur bilgisi de gösterilir.
-      text = step.iterations > 1
-          ? l.stepInfoRound(
-              game.currentStepNumber,
-              game.totalSteps,
-              command,
-              step.iteration,
-              step.iterations,
-            )
-          : l.stepInfo(game.currentStepNumber, game.totalSteps, command);
-    }
-    return Container(
-      constraints: const BoxConstraints(minHeight: 28),
-      alignment: Alignment.center,
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Semantics(
-        liveRegion: true,
-        child: Text(
-          text ?? '',
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            color: color,
-            fontSize: 14,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _Controls extends StatelessWidget {
-  const _Controls({required this.game, required this.runKey});
-
-  final GameController game;
-  final GlobalKey runKey;
-
-  @override
-  Widget build(BuildContext context) {
-    final l = context.l10n;
-    final running = game.isRunning;
-    final Widget left;
-    final Widget right;
-
-    if (running || game.phase == GamePhase.success) {
-      left = TogglePill(
-        label: l.fast,
-        icon: Icons.fast_forward,
-        value: game.fast,
-        onChanged: game.setFast,
-      );
-      right = AppButton(
-        key: runKey,
-        label: l.stop,
-        icon: Icons.stop,
-        onPressed: running ? game.stop : null,
-      );
-    } else {
-      left = AppButton(
-        label: l.clear,
-        primary: false,
-        onPressed: game.program.isEmpty ? null : game.clear,
-      );
-      right = AppButton(
-        key: runKey,
-        label: l.run,
-        icon: Icons.play_arrow,
-        onPressed: game.run,
-      );
-    }
-
-    return Row(
-      children: [
-        Expanded(
-          child: left is TogglePill
-              ? Align(alignment: Alignment.centerLeft, child: left)
-              : SizedBox(width: double.infinity, child: left),
-        ),
-        const SizedBox(width: 12),
-        Expanded(flex: 2, child: right),
-      ],
-    );
-  }
-}
-
-class _FailurePanel extends StatelessWidget {
-  const _FailurePanel({required this.game});
-
-  final GameController game;
-
-  @override
-  Widget build(BuildContext context) {
-    final l = context.l10n;
-    final crashed = game.phase == GamePhase.crashed;
-    // 5–7: okumadan anlaşılsın diye büyük karakter; çarpma animasyonu
-    // yeniden oynar.
-    final young = game.level.ageGroup == AgeGroup.ages5to7;
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.panel,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (young)
-            SizedBox.square(
-              dimension: 88,
-              child: CharacterView(
-                key: ValueKey(game.lifeLostCount),
-                character: game.character,
-                state: crashed ? CharacterState.crash : CharacterState.idle,
-                facing: game.facing,
-                showDisc: true,
-              ),
-            ),
-          Semantics(
-            liveRegion: true,
-            child: Text(
-              crashed ? l.crashMessage : l.stoppedShortMessage,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: AppColors.textPrimary,
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
-          SizedBox(
-            width: double.infinity,
-            child: AppButton(
-              label: l.tryAgain,
-              icon: Icons.replay,
-              onPressed: game.retry,
             ),
           ),
         ],

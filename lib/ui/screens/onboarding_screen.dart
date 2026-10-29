@@ -12,7 +12,7 @@ import '../widgets/app_button.dart';
 import '../widgets/character_card.dart';
 import '../widgets/character_view.dart';
 import 'home_screen.dart';
-import 'level_select_screen.dart';
+import '../tutorial/tutorial_screen.dart';
 
 /// İlk açılış: 1) yaş aralığı, 2) arkadaş seçimi, 3) seviye seçimi.
 class OnboardingScreen extends StatefulWidget {
@@ -38,15 +38,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     setState(() => _pickingFriend = true);
   }
 
+  /// Ana menü altta kalır; üstüne ilk "Oyna" açılır (eğitim görülmediyse
+  /// önce eğitim, bitince seviye seçimi).
   void _finish() {
     context.read<SoundService>().play(Sound.tap);
     final nav = Navigator.of(context);
     nav.pushReplacement(
       MaterialPageRoute<void>(builder: (_) => const HomeScreen()),
     );
-    nav.push(
-      MaterialPageRoute<void>(builder: (_) => const LevelSelectScreen()),
-    );
+    openPlay(nav.context);
   }
 
   @override

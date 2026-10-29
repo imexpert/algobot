@@ -3,6 +3,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/age_group.dart';
 
+/// Eğitimin bitiş biçimi. Atlanan eğitim de tamamlanmış sayılır; ama eski
+/// Seviye 1–2 parmak tanıtımları yalnızca atlandıysa gösterilir.
+enum TutorialStatus { completed, skipped }
+
 class SettingsController extends ChangeNotifier {
   SettingsController(this._prefs)
     : _soundOn = _prefs.getBool(_soundKey) ?? true,
@@ -50,6 +54,35 @@ class SettingsController extends ChangeNotifier {
     notifyListeners();
     await _prefs.setString(_ageKey, age.name);
   }
+
+  // --- Eğitim ---
+
+  static String tutorialKey(CommandFamily family) =>
+      'tutorial_done_${family.name}';
+
+  static String mechanicKey(String mechanic) => 'mechanic_intro_seen_$mechanic';
+
+  /// Komut ailesinin eğitimi: tamamlandı, atlandı ya da hiç (null).
+  /// 8–12 ve 13+ aynı aileyi kullanır; eğitim bir kez gösterilir.
+  TutorialStatus? tutorialStatus(CommandFamily family) => TutorialStatus.values
+      .where((s) => s.name == _prefs.getString(tutorialKey(family)))
+      .firstOrNull;
+
+  bool tutorialDone(CommandFamily family) => tutorialStatus(family) != null;
+
+  Future<void> setTutorialStatus(
+    CommandFamily family,
+    TutorialStatus status,
+  ) async {
+    await _prefs.setString(tutorialKey(family), status.name);
+    notifyListeners();
+  }
+
+  bool mechanicIntroSeen(String mechanic) =>
+      _prefs.getBool(mechanicKey(mechanic)) ?? false;
+
+  Future<void> setMechanicIntroSeen(String mechanic) =>
+      _prefs.setBool(mechanicKey(mechanic), true);
 
   Future<void> setCharacter(String id) async {
     if (id == _characterId) return;

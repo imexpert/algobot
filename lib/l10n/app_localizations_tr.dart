@@ -169,6 +169,27 @@ class AppLocalizationsTr extends AppLocalizations {
   String get cmdMoveRight => 'Sağ';
 
   @override
+  String get cardHelpForward => 'Baktığın yöne 1 kare git';
+
+  @override
+  String get cardHelpTurnRight => 'Olduğun yerde sağa dön';
+
+  @override
+  String get cardHelpTurnLeft => 'Olduğun yerde sola dön';
+
+  @override
+  String get cardHelpUp => 'Yukarı 1 kare git';
+
+  @override
+  String get cardHelpDown => 'Aşağı 1 kare git';
+
+  @override
+  String get cardHelpMoveLeft => 'Sola 1 kare git';
+
+  @override
+  String get cardHelpMoveRight => 'Sağa 1 kare git';
+
+  @override
   String paletteCardLabel(String command) {
     return '$command kartı';
   }
@@ -823,4 +844,192 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get maxRepeat => 'En fazla ×5';
+
+  @override
+  String get howToPlay => 'Nasıl oynanır?';
+
+  @override
+  String get tutTitle => 'Eğitim';
+
+  @override
+  String get tutSkip => 'Atla';
+
+  @override
+  String get tutSkipConfirm =>
+      'Eğitimi atlamak istiyor musun? İstediğin zaman ana ekrandan tekrar izleyebilirsin.';
+
+  @override
+  String get tutHelpConfirm =>
+      'Eğitimi başlatmak ister misin? Bu seviyedeki programın kaybolmaz.';
+
+  @override
+  String get tutHelpStart => 'Eğitimi başlat';
+
+  @override
+  String get tutHelpMechanic => 'Bu seviyenin tanıtımı';
+
+  @override
+  String get tutNext => 'Devam ›';
+
+  @override
+  String get tutStart => 'Başla';
+
+  @override
+  String get tutGotIt => 'Anladım';
+
+  @override
+  String get tutProgressLabel => 'Eğitim ilerlemesi';
+
+  @override
+  String tutWrongCard(String card) {
+    return 'Bu sefer $card kartına dokun.';
+  }
+
+  @override
+  String get tutTryAgain => 'Az kaldı! Tekrar dene.';
+
+  @override
+  String get tutForgot => 'Hedefe ulaştın ama bir şeyi unuttun!';
+
+  @override
+  String get tutRemoveWrong => 'Yanlış kartı silmek için ona dokun.';
+
+  @override
+  String get tutRel01 =>
+      'Merhaba! Bu senin karakterin. Onu hedefe götüreceğiz.';
+
+  @override
+  String get tutRel02 => 'Burası hedef.';
+
+  @override
+  String get tutRel03 =>
+      'Bu sarı ok karakterin baktığı yön. İleri dersen bu kareye gider.';
+
+  @override
+  String get tutRel04 => 'İleri kartına dokun.';
+
+  @override
+  String get tutRel05 =>
+      'Kart programına eklendi! Karakter bu kartları sırayla yapacak.';
+
+  @override
+  String get tutRel06 => 'Hedefe 2 kare var. Bir İleri daha ekle.';
+
+  @override
+  String get tutRel07 => 'Şimdi Çalıştır\'a bas ve izle!';
+
+  @override
+  String get tutRel08 => 'Harika! İlk programını yazdın.';
+
+  @override
+  String get tutRel09 => 'Bu sefer hedef aşağıda. Karakter sağa bakıyor.';
+
+  @override
+  String get tutRel10 => 'Önce bir kare ilerle.';
+
+  @override
+  String get tutRel11 =>
+      'Şimdi Sağa kartına dokun. Sağa kartı karakteri yürütmez, sadece olduğu yerde çevirir.';
+
+  @override
+  String get tutRel12 =>
+      'Döndükten sonra ok aşağıyı gösterecek. Bir İleri daha ekle.';
+
+  @override
+  String get tutRel13 => 'Çalıştır\'a bas. Dönerken oku izle!';
+
+  @override
+  String get tutRel14 =>
+      'Sağ ve sol, karakterin kendi baktığı yöne göredir. Emin değilsen karta basılı tut, ne yaptığını söyler.';
+
+  @override
+  String get tutRel15 =>
+      'Yanlış kart eklersen şeritteki karta dokunarak silebilirsin. Şimdi bir kartı sil.';
+
+  @override
+  String get tutRel16 => 'Sıra sende! Bu yolu kendin çöz.';
+
+  @override
+  String tutRel17(String id) {
+    String _temp0 = intl.Intl.selectLogic(id, {
+      'bip': 'pil',
+      'pati': 'balık',
+      'vizviz': 'bal damlası',
+      'buzi': 'buz kristali',
+      'tosbi': 'çilek',
+      'hop': 'havuç',
+      'zorp': 'yıldız',
+      'kivilcim': 'altın para',
+      'other': 'hazine',
+    });
+    return 'Bu bir $_temp0. Toplarsan daha çok yıldız kazanırsın.';
+  }
+
+  @override
+  String get tutRel18 =>
+      '1 yıldız: hedefe ulaş. 2 yıldız: hepsini topla. 3 yıldız: en az kartla çöz.';
+
+  @override
+  String get tutRel19 => 'Hem topla hem hedefe ulaş!';
+
+  @override
+  String get tutRel20 =>
+      'Oyunda 3 canın var. Program hedefe ulaşamazsa 1 can gider. Canlar zamanla geri gelir.';
+
+  @override
+  String get tutRel21 =>
+      'Takılırsan jokerler sana yardım eder: seviyeyi atla, can al.';
+
+  @override
+  String get tutRel21Video =>
+      'Takılırsan jokerler sana yardım eder: seviyeyi atla, can al ya da video izle.';
+
+  @override
+  String get tutRel22 => 'Hazırsın! Hadi ilk seviyeye geçelim.';
+
+  @override
+  String get tutAbs01 => 'Bu senin arkadaşın!';
+
+  @override
+  String get tutAbs02 => 'Onu buraya götürelim.';
+
+  @override
+  String get tutAbs03 => 'Sağ okuna dokun.';
+
+  @override
+  String get tutAbs04 => 'Bir kere daha!';
+
+  @override
+  String get tutAbs05 => 'Yeşil düğmeye bas!';
+
+  @override
+  String get tutAbs06 => 'Süper!';
+
+  @override
+  String get tutAbs07 => 'Şimdi sağa, sonra aşağı.';
+
+  @override
+  String get tutAbs08 => 'Yanlış kartı silmek için ona dokun.';
+
+  @override
+  String get tutAbs09 => 'Hazineyi de al!';
+
+  @override
+  String get tutAbs10 => '3 kalbin var. Hata yapınca bir kalp gider.';
+
+  @override
+  String get tutAbs11 => 'Hazırsın!';
+
+  @override
+  String get tutMechIce => 'Buzda durana kadar kayarsın.';
+
+  @override
+  String get tutMechDoor => 'Anahtarı alınca kapı açılır.';
+
+  @override
+  String get tutMechPortal =>
+      'Bir portala girersen diğerinden çıkarsın, yönün değişmez.';
+
+  @override
+  String get tutMechWatch => 'İzle! Hazır olunca Anladım\'a bas.';
 }

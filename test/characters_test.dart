@@ -64,8 +64,10 @@ void main() {
       paintCollectible(canvas, kind, const Offset(40, 40), 40, bob: 1.2);
       paintCollectible(canvas, kind, const Offset(40, 40), 40, scale: 0);
     }
+    paintBaseDisc(canvas, const Offset(40, 40), 80);
     for (var q = 0.0; q <= 4; q += 0.5) {
-      paintBaseDisc(canvas, const Offset(40, 40), 80, q);
+      paintDirectionArrow(canvas, const Offset(40, 40), 80, q, nudge: 2);
+      paintTurnArc(canvas, const Offset(40, 40), 80, q < 2 ? 1 : -1, 0.5);
     }
     recorder.endRecording().dispose();
   });

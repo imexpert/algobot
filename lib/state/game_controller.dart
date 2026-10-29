@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
 import '../audio/sound_service.dart';
+import '../characters/base_disc_painter.dart';
 import '../characters/character_def.dart';
 import '../characters/character_painter.dart';
 import '../engine/run_result.dart';
@@ -15,10 +16,12 @@ import '../data/session_repository.dart';
 import '../jokers/joker_type.dart';
 import '../models/age_config.dart';
 import '../models/age_group.dart';
+import '../models/cell.dart';
 import '../models/command.dart';
 import '../models/direction.dart';
 import '../models/level.dart';
 import '../models/program.dart';
+import '../tutorial/ghost_demo.dart';
 import 'progress_controller.dart';
 
 enum GamePhase { editing, running, crashed, stoppedShort, success }
@@ -72,6 +75,20 @@ class FlyingItem {
   final bool isKey;
 }
 
+/// Oyuncunun program üzerindeki eylemleri. Eğitim modu bunları
+/// [GameController.actionGuard] ile süzer ve [GameController.onAction] ile
+/// izler.
+enum GameActionKind { addCard, addRepeat, removeCard, moveCard, clear, run }
+
+@immutable
+class GameAction {
+  const GameAction(this.kind, {this.command});
+  final GameActionKind kind;
+
+  /// [GameActionKind.addCard] için eklenmek istenen komut.
+  final Command? command;
+}
+
 /// Seviye oturumunun durumu: program şeridi, oynatma ve ipuçları.
 /// Oyun mantığı [Simulator]'dadır; burada yalnızca sonuç adımları oynatılır.
 class GameController extends ChangeNotifier {
@@ -82,14 +99,38 @@ class GameController extends ChangeNotifier {
     required this._sound,
     required this._progress,
     required this._sessions,
+    this.tutorialMode = false,
+    this.suppressLevelTutorial = false,
   }) : _anim = AnimationController(vsync: vsync) {
-    // Yarım kalmış program kaldığı yerden.
-    for (final c in _sessions.sessionFor(level).program) {
-      _program.add(ProgramCard(_nextCardId++, c));
+    // Yarım kalmış program kaldığı yerden (eğitimde kayıt yok).
+    if (!tutorialMode) {
+      for (final c in _sessions.sessionFor(level).program) {
+        _program.add(ProgramCard(_nextCardId++, c));
+      }
     }
     _tutorialDone = _program.isNotEmpty;
+    if (tutorialMode) _introVisible = false;
     _resetPose();
   }
+
+  /// Eğitim modu: can düşmez, joker yok; yıldız, ilerleme ve program
+  /// kaydedilmez.
+  final bool tutorialMode;
+
+  /// Eğitim tamamlandıysa eski Seviye 1–2 parmak tanıtımı gösterilmez.
+  final bool suppressLevelTutorial;
+
+  /// Eylem izni (eğitim). false dönerse eylem yapılmaz.
+  bool Function(GameAction action)? actionGuard;
+
+  /// Eylem yapıldıktan sonra çağrılır (eğitim ilerlemesi).
+  void Function(GameAction action)? onAction;
+
+  /// Her çalıştırma bittiğinde (başarı ya da başarısızlık) çağrılır.
+  void Function(RunResult result)? onRunFinished;
+
+  bool _allow(GameAction action) => actionGuard?.call(action) ?? true;
+  void _did(GameAction action) => onAction?.call(action);
 
   final Level level;
   final CharacterDef character;
@@ -177,10 +218,25 @@ class GameController extends ChangeNotifier {
 
   Set<Point<int>> get trail => _trail;
 
+  /// Seviye başında karakter, baktığı yöne bir kez kısa bir "bakış"
+  /// zıplaması yapar (sayfa geçişinden sonra, 300 ms).
+  static const lookHopStart = 0.45;
+  static const lookHopDuration = 0.3;
+
+  Offset get _lookHop {
+    if (_phase != GamePhase.editing || _skipping || _pos != level.start) {
+      return Offset.zero;
+    }
+    final u = (now - lookHopStart) / lookHopDuration;
+    if (u <= 0 || u >= 1) return Offset.zero;
+    final k = sin(pi * u) * 0.12;
+    return Offset(_dir.dx * k, _dir.dy * k);
+  }
+
   /// Karakterin hücre birimindeki konumu (animasyon dahil).
   Offset get characterCell {
     final seg = _currentSeg;
-    if (_animStep == null || seg == null) return _offset(_pos);
+    if (_animStep == null || seg == null) return _offset(_pos) + _lookHop;
     final u = _segProgress(seg);
     return switch (seg.kind) {
       _SegKind.turn => _offset(seg.from),
@@ -219,6 +275,73 @@ class GameController extends ChangeNotifier {
           _turnDelta * Curves.easeInOut.transform(_segProgress(seg));
     }
     return (_quarterTurns + _turnDelta).toDouble();
+  }
+
+  // --- Mekanik tanıtımı: yarı saydam hayalet canlandırması ---
+  GhostDemo? _ghost;
+  double _ghostStart = 0;
+
+  /// Hayaleti bir kez oynatır (null: durdurur).
+  void playGhost(GhostDemo? demo) {
+    _ghost = demo;
+    _ghostStart = now;
+    _notify();
+  }
+
+  /// Oynayan hayalet ve başlangıcından beri geçen süre (sn).
+  (GhostDemo, double)? get ghost {
+    final g = _ghost;
+    if (g == null) return null;
+    final t = now - _ghostStart;
+    return t > g.duration ? null : (g, t);
+  }
+
+  /// Karakterin durduğu andaki yönü (çeyrek tur; kuzey = 0).
+  double get facingQuarterTurns => _dir.index.toDouble();
+
+  /// Yön okunun nabız kayması (dp). Program çalışırken nabız durur.
+  double get arrowNudge => isRunning || _skipping ? 0 : arrowPulse(now);
+
+  /// Dönüş sırasında karakterin çevresindeki kavisli ok: (yön işareti,
+  /// opaklık). Dönüş bitince 0,3 sn'de solar; dönüş yoksa null.
+  (int, double)? get turnArc {
+    const fade = 0.3; // sn
+    final step = _animStep;
+    if (step != null && _segs.isNotEmpty && _segs.first.kind == _SegKind.turn) {
+      final turn = _segs.first;
+      final sign = _turnDelta.sign;
+      if (_elapsed <= turn.end) {
+        final u = _segProgress(turn);
+        return (sign, (u / 0.15).clamp(0.0, 1.0));
+      }
+      final t = (_elapsed - turn.end) / 1000 / fade;
+      return t < 1 ? (sign, 1 - t) : null;
+    }
+    final endAt = _arcEndAt;
+    if (endAt == null) return null;
+    final t = (now - endAt) / fade;
+    return t >= 0 && t < 1 ? (_arcSign, 1 - t) : null;
+  }
+
+  double? _arcEndAt;
+  int _arcSign = 0;
+
+  /// Karakterin önündeki kare ve açık olup olmadığı ("İleri dersen buraya
+  /// gidersin"). Yalnızca düzenlerken; 5–7'de (mutlak komutlar) yok.
+  (Point<int>, bool)? get frontCell {
+    if (_phase != GamePhase.editing || _skipping || _animStep != null) {
+      return null;
+    }
+    if (ageSettings.commandFamily == CommandFamily.absolute) return null;
+    final next = Point(_pos.x + _dir.dx, _pos.y + _dir.dy);
+    final open =
+        level.isInside(next) &&
+        switch (level.cellAt(next)) {
+          CellType.wall => false,
+          CellType.door => _hasKey,
+          _ => true,
+        };
+    return (next, open);
   }
 
   /// Karakterin önden görünüşte baktığı yön.
@@ -289,11 +412,12 @@ class GameController extends ChangeNotifier {
 
   // --- Canlar (kalıcı, seviye bazında) ---
   int get livesMax => AgeSettings.maxLives;
-  int get lives => _sessions.sessionFor(level).lives;
+  int get lives =>
+      tutorialMode ? AgeSettings.maxLives : _sessions.sessionFor(level).lives;
   bool get outOfLives => lives <= 0;
 
   /// Bir sonraki canın gelmesine kalan süre.
-  Duration? get nextLifeIn => _sessions.nextLifeIn(level);
+  Duration? get nextLifeIn => tutorialMode ? null : _sessions.nextLifeIn(level);
 
   /// Her can kaybında artar (kırılan kalp animasyonu için).
   int _lifeLostCount = 0;
@@ -319,6 +443,7 @@ class GameController extends ChangeNotifier {
   /// Parmak eğitimi: 5–7'de Seviye 1–2, 8–12'de Seviye 1; Dünya 2'nin
   /// ilk seviyesinde her yaşta (Tekrarla kartı).
   bool get showTutorial =>
+      !tutorialMode &&
       !_tutorialDone &&
       _phase == GamePhase.editing &&
       (level.world == 2
@@ -327,7 +452,9 @@ class GameController extends ChangeNotifier {
               AgeGroup.ages5to7 => level.number <= 2,
               AgeGroup.ages8to12 => level.number == 1,
               AgeGroup.ages13plus => false,
-            });
+            }) &&
+      // Dünya 2'nin Tekrarla tanıtımı eğitimde yok; her zaman gösterilir.
+      (level.world == 2 || !suppressLevelTutorial);
 
   /// Eğitim parmağının işaret ettiği palet kartı: Dünya 2'nin ilk
   /// seviyesinde Tekrarla, diğerlerinde çözümün ilk komutu.
@@ -387,6 +514,8 @@ class GameController extends ChangeNotifier {
 
   bool addCommand(Command command, {int? at}) {
     if (isLocked) return false;
+    final action = GameAction(GameActionKind.addCard, command: command);
+    if (!_allow(action)) return false;
     if (isFull) {
       _warnFull();
       return false;
@@ -398,23 +527,28 @@ class GameController extends ChangeNotifier {
     _sound.play(Sound.cardAdd);
     HapticFeedback.selectionClick();
     _notify();
+    _did(action);
     return true;
   }
 
   /// Komut kartını siler. Döngü kartları [removeLoop] ile silinir.
   void removeCard(int id) {
     if (isLocked) return;
+    const action = GameAction(GameActionKind.removeCard);
+    if (!_allow(action)) return;
     final before = _program.length;
     _program.removeWhere((c) => c.id == id && c.instruction is Move);
     if (_program.length == before) return;
     _programChanged();
     _sound.play(Sound.cardRemove);
     _notify();
+    _did(action);
   }
 
   /// Yalnızca komut kartları taşınır; böylece döngüler hep dengeli kalır.
   void moveCard(int id, int toIndex) {
     if (isLocked) return;
+    if (!_allow(const GameAction(GameActionKind.moveCard))) return;
     final from = _program.indexWhere((c) => c.id == id);
     if (from < 0 || _program[from].instruction is! Move) return;
     final card = _program.removeAt(from);
@@ -432,11 +566,14 @@ class GameController extends ChangeNotifier {
 
   void clear() {
     if (isLocked || _program.isEmpty) return;
+    const action = GameAction(GameActionKind.clear);
+    if (!_allow(action)) return;
     _program.clear();
     _openLoopId = null;
     _programChanged();
     _sound.play(Sound.cardRemove);
     _notify();
+    _did(action);
   }
 
   /// Tekrarla kartı. 5–7: [at] sıradaki kartın (yoksa son ok kartının)
@@ -445,6 +582,7 @@ class GameController extends ChangeNotifier {
   /// içine bırakılırsa o döngünün hemen arkasına eklenir.
   bool addRepeat({int? at}) {
     if (isLocked || !level.allowsLoops) return false;
+    if (!_allow(const GameAction(GameActionKind.addRepeat))) return false;
     switch (loopStyle) {
       case LoopStyle.multiplier:
         var target = -1;
@@ -558,12 +696,12 @@ class GameController extends ChangeNotifier {
   // ====================================================================
 
   bool isJokerUsed(JokerType type) =>
-      _sessions.sessionFor(level).usedJokers.contains(type);
+      !tutorialMode && _sessions.sessionFor(level).usedJokers.contains(type);
 
   /// Joker şu an kullanılabilir mi (çalışırken ve atlarken pasif; her
   /// joker seviye başına bir kez).
   bool canUseJoker(JokerType type) =>
-      !isRunning && !_skipping && !isJokerUsed(type);
+      !tutorialMode && !isRunning && !_skipping && !isJokerUsed(type);
 
   /// Can jokeri: +1 can (başlangıç değerini aşabilir).
   bool useLifeJoker() {
@@ -632,12 +770,15 @@ class GameController extends ChangeNotifier {
 
   Future<void> run() async {
     if (isLocked) return;
+    const action = GameAction(GameActionKind.run);
+    if (!_allow(action)) return;
     // Can kalmadıysa çalıştırılmaz; panel hemen açılır.
     if (outOfLives) {
       onOutOfLives?.call();
       return;
     }
     if (!_begin()) return;
+    _did(action);
     final token = _token;
     final steps = _result!.steps;
     for (var i = 0; i < steps.length; i++) {
@@ -774,6 +915,12 @@ class GameController extends ChangeNotifier {
     }
     if (token != _token || _disposed) return false;
 
+    // Dönüş kavisi adım bitince kısa sürede solar.
+    if (_segs.isNotEmpty && _segs.first.kind == _SegKind.turn) {
+      _arcSign = _turnDelta.sign;
+      _arcEndAt = now - (_total - _segs.first.end) / 1000;
+    }
+
     // Adımı kalıcı hale getir.
     var prev = step.fromPosition;
     for (final m in step.motions) {
@@ -812,10 +959,12 @@ class GameController extends ChangeNotifier {
       case RunOutcome.success:
         _phase = GamePhase.success;
         _lastStars = StarCalculator.stars(level, result);
-        _progress.record(level, _lastStars);
-        // Çözüldü: canlar ve jokerler yenilenir (oturum silinir).
-        _saveTimer?.cancel();
-        _sessions.reset(level);
+        if (!tutorialMode) {
+          _progress.record(level, _lastStars);
+          // Çözüldü: canlar ve jokerler yenilenir (oturum silinir).
+          _saveTimer?.cancel();
+          _sessions.reset(level);
+        }
         _setRest(CharacterState.win);
         _sound.play(Sound.win);
         HapticFeedback.lightImpact();
@@ -827,6 +976,7 @@ class GameController extends ChangeNotifier {
         _loseLife();
     }
     _notify();
+    onRunFinished?.call(result);
     if (_phase == GamePhase.success) {
       onSuccess?.call();
     } else if (outOfLives) {
@@ -837,7 +987,7 @@ class GameController extends ChangeNotifier {
 
   /// Başarısız bitiş: 1 can düşer (Durdur ve Temizle düşürmez).
   void _loseLife() {
-    if (lives <= 0) return;
+    if (tutorialMode || lives <= 0) return;
     _flushProgram();
     _sessions.loseLife(level);
     _lifeLostCount++;
@@ -846,6 +996,7 @@ class GameController extends ChangeNotifier {
   }
 
   void _programChanged() {
+    if (tutorialMode) return; // eğitimde program kaydedilmez
     _saveTimer?.cancel();
     _saveTimer = Timer(const Duration(milliseconds: 300), _flushProgram);
   }

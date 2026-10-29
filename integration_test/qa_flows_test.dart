@@ -184,6 +184,14 @@ void main() {
       // Temiz kurulum benzetimi: ayarlar ve veritabanı boş.
       final prefs = await SharedPreferences.getInstance();
       await prefs.clear();
+      // Bu akış eğitimi ayrıca test etmez (bkz. test/tutorial_test.dart):
+      // oyuncu eğitimi daha önce atlamış sayılır.
+      for (final f in ['relative', 'absolute']) {
+        await prefs.setString('tutorial_done_$f', 'skipped');
+      }
+      for (final m in ['ice', 'door', 'portal']) {
+        await prefs.setBool('mechanic_intro_seen_$m', true);
+      }
       // Varsayılan ses kapalı (emülatörde gürültü olmasın).
       // --dart-define=SOUND=true ile açık çalıştırılır; QA-6 düzeltmesinden
       // sonra bekleyen kare geri çağrısı 0 olmalı.

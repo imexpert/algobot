@@ -48,7 +48,7 @@ class HintBubble extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   if (glyphs.isNotEmpty) ...[
-                    _GlyphRow(glyphs: glyphs, collectible: collectible),
+                    GlyphRow(glyphs: glyphs, collectible: collectible),
                     const SizedBox(height: 6),
                   ],
                   Text(
@@ -184,8 +184,9 @@ class _TutorialFingerState extends State<TutorialFinger>
 }
 
 /// İpucunu okumadan anlatan simge dizisi.
-class _GlyphRow extends StatelessWidget {
-  const _GlyphRow({required this.glyphs, required this.collectible});
+/// Balonlarda metnin yanında gösterilen simgeler (5–7 ipuçları, eğitim).
+class GlyphRow extends StatelessWidget {
+  const GlyphRow({super.key, required this.glyphs, required this.collectible});
 
   final List<IntroGlyph> glyphs;
   final CollectibleKind collectible;
@@ -250,6 +251,21 @@ class _GlyphRow extends StatelessWidget {
       IntroGlyph.plus => const Icon(Icons.add, color: dark, size: 24),
       IntroGlyph.around => const Icon(Icons.alt_route, color: dark, size: 28),
       IntroGlyph.repeat => LoopCard(icon: Icons.repeat, label: '×', size: size),
+      IntroGlyph.star => const Icon(
+        Icons.star_rounded,
+        color: AppColors.starEarned,
+        size: size,
+      ),
+      IntroGlyph.heart => const Icon(
+        Icons.favorite,
+        color: Color(0xFFE24B4A),
+        size: size,
+      ),
+      IntroGlyph.remove => const Icon(
+        Icons.backspace_outlined,
+        color: dark,
+        size: 30,
+      ),
     };
   }
 }

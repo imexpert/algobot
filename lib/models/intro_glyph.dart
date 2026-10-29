@@ -15,4 +15,9 @@ enum IntroGlyph {
 
   /// Tekrarla kartı (Dünya 2).
   repeat,
+
+  /// Eğitim balonları: yıldız, kalp (can), kart silme.
+  star,
+  heart,
+  remove,
 }

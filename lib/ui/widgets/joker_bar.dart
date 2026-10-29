@@ -37,8 +37,10 @@ class JokerBar extends StatelessWidget {
               type: type,
               label: l.jokerLabel(type),
               used: game.isJokerUsed(type),
+              // Eğitimde jokerler tanıtılır: etkin görünür ama basmak
+              // bir şey yapmaz.
               enabled:
-                  game.canUseJoker(type) &&
+                  (game.tutorialMode || game.canUseJoker(type)) &&
                   (type != JokerType.video || videoAvailable),
               onTap: () => onUse(type),
             ),

@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 
 import '../../characters/base_disc_painter.dart';
+import '../../characters/character_painter.dart';
 import '../../characters/collectibles/collectible_painter.dart';
 import '../../core/colors.dart';
 import '../../models/cell.dart';
@@ -99,6 +100,13 @@ class BoardPainter extends CustomPainter {
     final cell = game.characterCell;
     final charCenter = _center(cell.dx, cell.dy);
 
+    // Önündeki kare: açıksa iki chevron ("İleri dersen buraya"), kapalıysa
+    // karakterin önünde kırmızımsı bir çizgi ("burası kapalı").
+    final front = game.frontCell;
+    if (front != null) {
+      _paintFront(canvas, front.$1, front.$2, game.facingQuarterTurns);
+    }
+
     // Toplanan nesneler küçülerek karaktere doğru uçar.
     for (final item in game.flyingItems) {
       if (item.progress >= 1) continue;
@@ -120,9 +128,10 @@ class BoardPainter extends CustomPainter {
     canvas.save();
     canvas.translate(charCenter.dx, charCenter.dy);
     canvas.scale(scale);
-    paintBaseDisc(canvas, Offset.zero, c, game.discQuarterTurns);
+    paintBaseDisc(canvas, Offset.zero, c);
     final box =
         c * 1.0; // karakter kutunun ~%75ini, yani karenin ~%75ini kaplar
+    canvas.save();
     canvas.translate(-box / 2, -box / 2 - c * 0.05);
     game.character.painter.paint(
       canvas,
@@ -132,6 +141,90 @@ class BoardPainter extends CustomPainter {
       game.characterTime,
     );
     canvas.restore();
+    // Yön oku ve dönüş kavisi karakterin üstünde: kulak, kanat vb. kapatmaz.
+    final arc = game.turnArc;
+    if (arc != null) paintTurnArc(canvas, Offset.zero, c, arc.$1, arc.$2);
+    paintDirectionArrow(
+      canvas,
+      Offset.zero,
+      c,
+      game.discQuarterTurns,
+      nudge: game.arrowNudge,
+    );
+    canvas.restore();
+    _paintGhost(canvas);
+  }
+
+  /// Mekanik tanıtımında yarı saydam hayalet karakter.
+  void _paintGhost(Canvas canvas) {
+    final g = game.ghost;
+    if (g == null) return;
+    final (demo, t) = g;
+    final frame = demo.at(t);
+    if (frame == null) return;
+    final (cell, opacity, scale) = frame;
+    final c = cellSize;
+    final center = _center(cell.dx, cell.dy);
+    canvas.saveLayer(
+      null,
+      Paint()..color = Colors.white.withValues(alpha: opacity),
+    );
+    canvas.translate(center.dx, center.dy);
+    canvas.scale(scale);
+    canvas.translate(-c / 2, -c / 2 - c * 0.05);
+    game.character.painter.paint(
+      canvas,
+      Size.square(c),
+      demo.direction,
+      CharacterState.moving,
+      (t * 1.5) % 1,
+    );
+    canvas.restore();
+    if (demo.carriesKey && opacity > 0) {
+      _paintKey(canvas, center - Offset(0, c * 0.55), c * 0.7, 0, scale);
+    }
+  }
+
+  /// Chevron rengi ve kapalı işareti.
+  static const chevronColor = Color(0x8CFAC775); // #FAC775, %55
+  static const blockedColor = Color(0x80E24B4A); // #E24B4A, %50
+
+  void _paintFront(Canvas canvas, Point<int> p, bool open, double quarter) {
+    final c = cellSize;
+    final dir = directionVector(quarter);
+    final side = Offset(-dir.dy, dir.dx);
+    if (open) {
+      final center = _centerOf(p);
+      final paint = Paint()
+        ..color = chevronColor
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = max(3, c * 0.1)
+        ..strokeCap = StrokeCap.round
+        ..strokeJoin = StrokeJoin.round;
+      for (final k in [-0.14, 0.12]) {
+        final tip = center + dir * (c * (k + 0.1));
+        final back = tip - dir * (c * 0.16);
+        canvas.drawPath(
+          Path()
+            ..moveTo((back + side * c * 0.2).dx, (back + side * c * 0.2).dy)
+            ..lineTo(tip.dx, tip.dy)
+            ..lineTo((back - side * c * 0.2).dx, (back - side * c * 0.2).dy),
+          paint,
+        );
+      }
+    } else {
+      // Karakterin karesinin önündeki kenarda kısa çizgi.
+      final from = Point(p.x - dir.dx.round(), p.y - dir.dy.round());
+      final edge = _centerOf(from) + dir * (c * 0.5 - max(2, c * 0.04));
+      canvas.drawLine(
+        edge + side * (c * 0.32),
+        edge - side * (c * 0.32),
+        Paint()
+          ..color = blockedColor
+          ..strokeWidth = max(4, c * 0.08)
+          ..strokeCap = StrokeCap.round,
+      );
+    }
   }
 
   void _paintIce(Canvas canvas, RRect rrect) {

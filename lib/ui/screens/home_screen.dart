@@ -11,8 +11,8 @@ import '../widgets/app_button.dart';
 import '../widgets/parent_gate_dialog.dart';
 import '../widgets/character_view.dart';
 import 'character_gallery_screen.dart';
+import '../tutorial/tutorial_screen.dart';
 import 'character_select_screen.dart';
-import 'level_select_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -128,7 +128,11 @@ class _HomeScreenState extends State<HomeScreen> {
                       label: context.l10n.play,
                       icon: Icons.play_arrow,
                       height: 64,
-                      onPressed: () => _open(const LevelSelectScreen()),
+                      // İlk "Oyna"da önce yaş grubunun eğitimi açılır.
+                      onPressed: () {
+                        context.read<SoundService>().play(Sound.tap);
+                        openPlay(context);
+                      },
                     ),
                   ),
                 ),
@@ -142,6 +146,22 @@ class _HomeScreenState extends State<HomeScreen> {
                       primary: false,
                       icon: Icons.pets,
                       onPressed: () => _open(const CharacterSelectScreen()),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 48),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: AppButton(
+                      label: context.l10n.howToPlay,
+                      primary: false,
+                      icon: Icons.school,
+                      onPressed: () {
+                        context.read<SoundService>().play(Sound.tap);
+                        openTutorial(context, settings.ageGroup);
+                      },
                     ),
                   ),
                 ),

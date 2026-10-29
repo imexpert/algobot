@@ -27,6 +27,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../helpers/fake_review.dart';
 import '../helpers/test_db.dart';
+import '../helpers/tutorial_prefs.dart';
 
 final en = lookupAppLocalizations(const Locale('en'));
 final tr = lookupAppLocalizations(const Locale('tr'));
@@ -97,11 +98,13 @@ Future<QaApp> qaSetUp(
   bool showSplash = false,
   FakeClock? clock,
   AppDatabase? database,
+  bool seenTutorial = true,
 }) async {
   SharedPreferences.setMockInitialValues({
     'sound_on': soundOn,
     'age_group': ?age?.name,
     ProgressRepository.migratedKey: true,
+    if (seenTutorial) ...seenTutorialPrefs,
     ...prefs,
   });
   final sp = await SharedPreferences.getInstance();

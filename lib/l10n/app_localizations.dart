@@ -344,6 +344,48 @@ abstract class AppLocalizations {
   /// **'Right'**
   String get cmdMoveRight;
 
+  /// No description provided for @cardHelpForward.
+  ///
+  /// In en, this message translates to:
+  /// **'Move 1 square the way you\'re facing'**
+  String get cardHelpForward;
+
+  /// No description provided for @cardHelpTurnRight.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn right on the spot'**
+  String get cardHelpTurnRight;
+
+  /// No description provided for @cardHelpTurnLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn left on the spot'**
+  String get cardHelpTurnLeft;
+
+  /// No description provided for @cardHelpUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Move 1 square up'**
+  String get cardHelpUp;
+
+  /// No description provided for @cardHelpDown.
+  ///
+  /// In en, this message translates to:
+  /// **'Move 1 square down'**
+  String get cardHelpDown;
+
+  /// No description provided for @cardHelpMoveLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'Move 1 square left'**
+  String get cardHelpMoveLeft;
+
+  /// No description provided for @cardHelpMoveRight.
+  ///
+  /// In en, this message translates to:
+  /// **'Move 1 square right'**
+  String get cardHelpMoveRight;
+
   /// No description provided for @paletteCardLabel.
   ///
   /// In en, this message translates to:
@@ -1405,6 +1447,324 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Up to ×5'**
   String get maxRepeat;
+
+  /// No description provided for @howToPlay.
+  ///
+  /// In en, this message translates to:
+  /// **'How to play'**
+  String get howToPlay;
+
+  /// No description provided for @tutTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Tutorial'**
+  String get tutTitle;
+
+  /// No description provided for @tutSkip.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip'**
+  String get tutSkip;
+
+  /// No description provided for @tutSkipConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip the tutorial? You can watch it again any time from the home screen.'**
+  String get tutSkipConfirm;
+
+  /// No description provided for @tutHelpConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Start the tutorial? Your program on this level won\'t be lost.'**
+  String get tutHelpConfirm;
+
+  /// No description provided for @tutHelpStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Start tutorial'**
+  String get tutHelpStart;
+
+  /// No description provided for @tutHelpMechanic.
+  ///
+  /// In en, this message translates to:
+  /// **'This level\'s intro'**
+  String get tutHelpMechanic;
+
+  /// No description provided for @tutNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next ›'**
+  String get tutNext;
+
+  /// No description provided for @tutStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Start'**
+  String get tutStart;
+
+  /// No description provided for @tutGotIt.
+  ///
+  /// In en, this message translates to:
+  /// **'Got it'**
+  String get tutGotIt;
+
+  /// No description provided for @tutProgressLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Tutorial progress'**
+  String get tutProgressLabel;
+
+  /// No description provided for @tutWrongCard.
+  ///
+  /// In en, this message translates to:
+  /// **'This time, tap the {card} card.'**
+  String tutWrongCard(String card);
+
+  /// No description provided for @tutTryAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Almost! Try again.'**
+  String get tutTryAgain;
+
+  /// No description provided for @tutForgot.
+  ///
+  /// In en, this message translates to:
+  /// **'You reached the goal, but you forgot something!'**
+  String get tutForgot;
+
+  /// No description provided for @tutRemoveWrong.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap a wrong card to remove it.'**
+  String get tutRemoveWrong;
+
+  /// No description provided for @tutRel01.
+  ///
+  /// In en, this message translates to:
+  /// **'Hi! This is your character. Let\'s take it to the goal.'**
+  String get tutRel01;
+
+  /// No description provided for @tutRel02.
+  ///
+  /// In en, this message translates to:
+  /// **'This is the goal.'**
+  String get tutRel02;
+
+  /// No description provided for @tutRel03.
+  ///
+  /// In en, this message translates to:
+  /// **'The yellow arrow shows where your character is facing. Forward moves it to this square.'**
+  String get tutRel03;
+
+  /// No description provided for @tutRel04.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap the Forward card.'**
+  String get tutRel04;
+
+  /// No description provided for @tutRel05.
+  ///
+  /// In en, this message translates to:
+  /// **'The card is in your program! Your character will do the cards in order.'**
+  String get tutRel05;
+
+  /// No description provided for @tutRel06.
+  ///
+  /// In en, this message translates to:
+  /// **'The goal is 2 squares away. Add one more Forward.'**
+  String get tutRel06;
+
+  /// No description provided for @tutRel07.
+  ///
+  /// In en, this message translates to:
+  /// **'Now tap Run and watch!'**
+  String get tutRel07;
+
+  /// No description provided for @tutRel08.
+  ///
+  /// In en, this message translates to:
+  /// **'Great! You wrote your first program.'**
+  String get tutRel08;
+
+  /// No description provided for @tutRel09.
+  ///
+  /// In en, this message translates to:
+  /// **'This time the goal is below. Your character is facing right.'**
+  String get tutRel09;
+
+  /// No description provided for @tutRel10.
+  ///
+  /// In en, this message translates to:
+  /// **'First, move one square forward.'**
+  String get tutRel10;
+
+  /// No description provided for @tutRel11.
+  ///
+  /// In en, this message translates to:
+  /// **'Now tap the Right card. It doesn\'t walk, it only turns your character on the spot.'**
+  String get tutRel11;
+
+  /// No description provided for @tutRel12.
+  ///
+  /// In en, this message translates to:
+  /// **'After the turn, the arrow will point down. Add one more Forward.'**
+  String get tutRel12;
+
+  /// No description provided for @tutRel13.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap Run. Watch the arrow as it turns!'**
+  String get tutRel13;
+
+  /// No description provided for @tutRel14.
+  ///
+  /// In en, this message translates to:
+  /// **'Right and left depend on where your character is facing. If you\'re not sure, press and hold a card to see what it does.'**
+  String get tutRel14;
+
+  /// No description provided for @tutRel15.
+  ///
+  /// In en, this message translates to:
+  /// **'To remove a wrong card, tap it in your program. Try it now: remove a card.'**
+  String get tutRel15;
+
+  /// No description provided for @tutRel16.
+  ///
+  /// In en, this message translates to:
+  /// **'Your turn! Solve this path on your own.'**
+  String get tutRel16;
+
+  /// No description provided for @tutRel17.
+  ///
+  /// In en, this message translates to:
+  /// **'This is {id, select, bip{a battery} pati{a fish} vizviz{a honey drop} buzi{an ice crystal} tosbi{a strawberry} hop{a carrot} zorp{a star} kivilcim{a coin} other{a treasure}}. Collect it to earn more stars.'**
+  String tutRel17(String id);
+
+  /// No description provided for @tutRel18.
+  ///
+  /// In en, this message translates to:
+  /// **'1 star: reach the goal. 2 stars: collect everything. 3 stars: use the fewest cards.'**
+  String get tutRel18;
+
+  /// No description provided for @tutRel19.
+  ///
+  /// In en, this message translates to:
+  /// **'Collect it and reach the goal!'**
+  String get tutRel19;
+
+  /// No description provided for @tutRel20.
+  ///
+  /// In en, this message translates to:
+  /// **'You have 3 lives. If your program misses the goal, you lose 1. Lives come back over time.'**
+  String get tutRel20;
+
+  /// No description provided for @tutRel21.
+  ///
+  /// In en, this message translates to:
+  /// **'Stuck? Jokers can help: skip the level or get a life.'**
+  String get tutRel21;
+
+  /// No description provided for @tutRel21Video.
+  ///
+  /// In en, this message translates to:
+  /// **'Stuck? Jokers can help: skip the level, get a life or watch a video.'**
+  String get tutRel21Video;
+
+  /// No description provided for @tutRel22.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re ready! Let\'s go to the first level.'**
+  String get tutRel22;
+
+  /// No description provided for @tutAbs01.
+  ///
+  /// In en, this message translates to:
+  /// **'This is your friend!'**
+  String get tutAbs01;
+
+  /// No description provided for @tutAbs02.
+  ///
+  /// In en, this message translates to:
+  /// **'Let\'s take it here.'**
+  String get tutAbs02;
+
+  /// No description provided for @tutAbs03.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap the right arrow.'**
+  String get tutAbs03;
+
+  /// No description provided for @tutAbs04.
+  ///
+  /// In en, this message translates to:
+  /// **'One more time!'**
+  String get tutAbs04;
+
+  /// No description provided for @tutAbs05.
+  ///
+  /// In en, this message translates to:
+  /// **'Press the green button!'**
+  String get tutAbs05;
+
+  /// No description provided for @tutAbs06.
+  ///
+  /// In en, this message translates to:
+  /// **'Super!'**
+  String get tutAbs06;
+
+  /// No description provided for @tutAbs07.
+  ///
+  /// In en, this message translates to:
+  /// **'Now right, then down.'**
+  String get tutAbs07;
+
+  /// No description provided for @tutAbs08.
+  ///
+  /// In en, this message translates to:
+  /// **'To remove a wrong card, tap it.'**
+  String get tutAbs08;
+
+  /// No description provided for @tutAbs09.
+  ///
+  /// In en, this message translates to:
+  /// **'Grab the treasure too!'**
+  String get tutAbs09;
+
+  /// No description provided for @tutAbs10.
+  ///
+  /// In en, this message translates to:
+  /// **'You have 3 hearts. A mistake costs one heart.'**
+  String get tutAbs10;
+
+  /// No description provided for @tutAbs11.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re ready!'**
+  String get tutAbs11;
+
+  /// No description provided for @tutMechIce.
+  ///
+  /// In en, this message translates to:
+  /// **'On ice, you slide until something stops you.'**
+  String get tutMechIce;
+
+  /// No description provided for @tutMechDoor.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick up the key and the door opens.'**
+  String get tutMechDoor;
+
+  /// No description provided for @tutMechPortal.
+  ///
+  /// In en, this message translates to:
+  /// **'Step into one portal and you come out of the other, facing the same way.'**
+  String get tutMechPortal;
+
+  /// No description provided for @tutMechWatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Watch! Tap Got it when you\'re ready.'**
+  String get tutMechWatch;
 }
 
 class _AppLocalizationsDelegate
