@@ -34,20 +34,28 @@ check_requirements() {
 
   command -v flutter >/dev/null || fail "Flutter not found"
   command -v bundle >/dev/null || fail "Bundler not found"
+  command -v ruby >/dev/null || fail "Ruby not found"
 
   [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+\+[0-9]+$ ]] ||
     fail "Invalid version: $VERSION"
 
   local file
+
   for file in \
     "tr-TR.txt" \
     "en-US.txt" \
     "promotional-tr-TR.txt" \
-    "promotional-en-US.txt"; do
-
+    "promotional-en-US.txt"
+  do
     [[ -s "$NOTES_DIR/$file" ]] ||
       fail "Missing or empty release file: $NOTES_DIR/$file"
   done
+
+  [[ -f "$ROOT_DIR/scripts/check_android_store.rb" ]] ||
+    fail "Android store check script not found"
+
+  [[ -f "$ROOT_DIR/scripts/check_ios_store.rb" ]] ||
+    fail "iOS store check script not found"
 
   (cd "$ANDROID_DIR" && bundle exec fastlane android check_release)
   (cd "$IOS_DIR" && bundle exec fastlane ios check_release)
@@ -55,12 +63,43 @@ check_requirements() {
   log "Release metadata validation completed"
 }
 
+read_store_status() {
+  local platform="$1"
+  local script="$ROOT_DIR/scripts/check_${platform}_store.rb"
+  local result
+  local status
+
+  if ! result="$(ruby "$script")"; then
+    fail "$platform store query failed. Release blocked."
+  fi
+
+  status="$(
+    printf '%s' "$result" |
+      ruby -rjson -e '
+        data = JSON.parse(STDIN.read)
+        expected_platform = ARGV.fetch(0)
+        expected_version = ARGV.fetch(1)
+
+        unless data["platform"] == expected_platform &&
+               data["version"] == expected_version &&
+               %w[EXISTS AVAILABLE].include?(data["status"])
+          abort "Invalid store status response"
+        end
+
+        puts data["status"]
+      ' "$platform" "$VERSION"
+  )" || fail "$platform store status could not be validated"
+
+  printf '%s' "$status"
+}
+
 build_android() {
   log "Building Android AAB"
 
   (cd "$ANDROID_DIR" && bundle exec fastlane android build)
 
-  [[ -f "$ANDROID_AAB" ]] || fail "Android AAB not found"
+  [[ -f "$ANDROID_AAB" ]] ||
+    fail "Android AAB not found"
 }
 
 build_ios() {
@@ -68,54 +107,69 @@ build_ios() {
 
   (cd "$IOS_DIR" && bundle exec fastlane ios build)
 
-  [[ -f "$IOS_IPA" ]] || fail "iOS IPA not found"
+  [[ -f "$IOS_IPA" ]] ||
+    fail "iOS IPA not found"
 }
 
 upload_android() {
   log "Uploading Android to Google Play Production"
-
-  # Uses existing AAB without rebuilding.
   (cd "$ANDROID_DIR" && bundle exec fastlane android upload)
 }
 
 upload_ios() {
   log "Uploading iOS to App Store Connect"
-
-  # Uses existing IPA without rebuilding.
   (cd "$IOS_DIR" && bundle exec fastlane ios upload)
 }
 
 main() {
   log "AlgoBot Unified Release"
-
   printf 'Shared version: %s\n' "$VERSION"
 
   check_requirements
+
+  log "Checking existing store versions"
+
+  local android_status
+  local ios_status
+
+  android_status="$(read_store_status android)"
+  ios_status="$(read_store_status ios)"
+
+  printf '\nStore status:\n'
+  printf '  Android: %s\n' "$android_status"
+  printf '  iOS:     %s\n' "$ios_status"
+
+  if [[ "$android_status" == "EXISTS" &&
+        "$ios_status" == "EXISTS" ]]; then
+    log "Version already exists on both stores"
+    printf 'No builds or uploads are necessary.\n'
+    exit 0
+  fi
 
   printf '\nRelease targets:\n'
   printf '  Android: Google Play Production\n'
   printf '  iOS: App Store Connect\n'
 
-  if ! confirm "Build Android and iOS for version $VERSION?"; then
-    log "Release cancelled"
-    exit 0
+  if [[ "$android_status" == "EXISTS" ]]; then
+    log "Android already exists on Google Play — skipping"
+  else
+    if confirm "Build and upload Android version $VERSION?"; then
+      build_android
+      upload_android
+    else
+      log "Android release skipped"
+    fi
   fi
 
-  build_android
-  build_ios
-
-  log "Both platform builds completed"
-
-  if confirm "Proceed to Android upload?"; then
-    upload_android
+  if [[ "$ios_status" == "EXISTS" ]]; then
+    log "iOS already exists on App Store Connect — skipping"
   else
-    log "Android upload skipped"
-  fi
-
-  if confirm "Proceed to iOS upload?"; then
-    upload_ios
-  else
-    log "iOS upload skipped"
+    if confirm "Build and upload iOS version $VERSION?"; then
+      build_ios
+      upload_ios
+    else
+      log "iOS release skipped"
+    fi
   fi
 
   log "AlgoBot release workflow finished"

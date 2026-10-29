@@ -1,38 +1,340 @@
-# This file contains the fastlane.tools configuration
-# You can find the documentation at https://docs.fastlane.tools
-#
-# For a list of all available actions, check out
-#
-#     https://docs.fastlane.tools/actions
-#
-# For a list of all available plugins, check out
-#
-#     https://docs.fastlane.tools/plugins/available-plugins
-#
 
-# Uncomment the line if you want fastlane to automatically update itself
-# update_fastlane
+require "fileutils"
+require "shellwords"
+require "open3"
 
 default_platform(:android)
 
-platform :android do
-  desc "Runs all the tests"
-  lane :test do
-    gradle(task: "test")
+# --------------------------------------------------
+# AlgoBot paths
+# --------------------------------------------------
+
+ROOT_DIR = File.expand_path("../..", __dir__)
+NOTES_ROOT = File.join(ROOT_DIR, "release-notes")
+METADATA_PATH = File.join(__dir__, "metadata", "android")
+
+AAB_PATH = File.join(
+  ROOT_DIR,
+  "build/app/outputs/bundle/release/app-release.aab"
+)
+
+# --------------------------------------------------
+# Shared Flutter version
+# --------------------------------------------------
+
+def algobot_version
+  pubspec = File.join(ROOT_DIR, "pubspec.yaml")
+
+  UI.user_error!("pubspec.yaml not found!") unless File.file?(pubspec)
+
+  line = File.readlines(pubspec).find do |item|
+    item.match?(/^version:\s*/)
   end
 
-  desc "Submit a new Beta Build to Crashlytics Beta"
-  lane :beta do
-    gradle(task: "clean assembleRelease")
-    crashlytics
-  
-    # sh "your_script.sh"
-    # You can also use other beta testing services here
+  UI.user_error!("Version not found!") unless line
+
+  version = line.split(":", 2).last.strip
+
+  unless version.match?(/\A\d+\.\d+\.\d+\+\d+\z/)
+    UI.user_error!("Invalid version: #{version}")
   end
 
-  desc "Deploy a new version to the Google Play"
-  lane :deploy do
-    gradle(task: "clean assembleRelease")
-    upload_to_play_store
+  version
+end
+
+# --------------------------------------------------
+# Shared Turkish and English release notes
+# --------------------------------------------------
+
+def algobot_notes(version)
+  directory = File.join(NOTES_ROOT, version)
+  notes = {}
+
+  ["tr-TR", "en-US"].each do |locale|
+    path = File.join(directory, "#{locale}.txt")
+
+    UI.user_error!("Missing release notes: #{path}") unless File.file?(path)
+
+    content = File.read(path, encoding: "UTF-8").strip
+
+    UI.user_error!(
+      "#{locale}: Release notes cannot be empty!"
+    ) if content.empty?
+
+    UI.user_error!(
+      "#{locale}: Maximum 500 characters!"
+    ) if content.length > 500
+
+    notes[locale] = content
+  end
+
+  notes
+end
+
+# --------------------------------------------------
+# Prepare Google Play changelogs
+# --------------------------------------------------
+
+def algobot_prepare_changelogs(version, notes)
+  version_code = version.split("+").last
+
+  notes.each do |locale, content|
+    directory = File.join(
+      METADATA_PATH,
+      locale,
+      "changelogs"
+    )
+
+    FileUtils.mkdir_p(directory)
+
+    File.write(
+      File.join(directory, "#{version_code}.txt"),
+      content + "\n",
+      encoding: "UTF-8"
+    )
   end
 end
+
+# --------------------------------------------------
+# Read actual Android App Bundle attributes
+# --------------------------------------------------
+
+def algobot_aab_attribute(attribute)
+  UI.user_error!(
+    "AAB not found: #{AAB_PATH}"
+  ) unless File.file?(AAB_PATH)
+
+  bundletool = `command -v bundletool`.strip
+
+  UI.user_error!(
+    "bundletool is required. Install it with: brew install bundletool"
+  ) if bundletool.empty?
+
+  command = [
+    bundletool,
+    "dump",
+    "manifest",
+    "--bundle=#{AAB_PATH}",
+    "--xpath=/manifest/@android:#{attribute}"
+  ]
+
+  output, error, status = Open3.capture3(*command)
+
+  unless status.success?
+    UI.user_error!(
+      "bundletool failed reading #{attribute}: #{error}"
+    )
+  end
+
+  output.strip
+end
+
+# --------------------------------------------------
+# Verify AAB version against pubspec.yaml
+# --------------------------------------------------
+
+def algobot_verify_aab
+  expected_version = algobot_version
+  expected_name, expected_code = expected_version.split("+")
+
+  actual_name = algobot_aab_attribute("versionName")
+  actual_code = algobot_aab_attribute("versionCode")
+
+  unless actual_name == expected_name
+    UI.user_error!(
+      "AAB versionName mismatch! " \
+      "Expected #{expected_name}, got #{actual_name}"
+    )
+  end
+
+  unless actual_code == expected_code
+    UI.user_error!(
+      "AAB versionCode mismatch! " \
+      "Expected #{expected_code}, got #{actual_code}"
+    )
+  end
+
+  UI.success(
+    "Android AAB version verified: #{expected_version}"
+  )
+end
+
+# --------------------------------------------------
+# Check Google Play existing version codes
+# --------------------------------------------------
+
+def algobot_check_google_play_version
+  version = algobot_version
+  version_code = version.split("+").last.to_i
+
+  UI.header("Google Play Version Check")
+  UI.message("Checking versionCode: #{version_code}")
+
+  tracks = [
+    "production",
+    "beta",
+    "alpha",
+    "internal"
+  ]
+
+  tracks.each do |track|
+    UI.message("Checking Google Play track: #{track}")
+
+    existing_codes = google_play_track_version_codes(
+      track: track
+    )
+
+    if existing_codes.map(&:to_i).include?(version_code)
+      UI.user_error!(
+        "Build #{version_code} already exists on " \
+        "Google Play track '#{track}'. Upload blocked!"
+      )
+    end
+  end
+
+  UI.success(
+    "Build #{version_code} not found on checked Google Play tracks."
+  )
+end
+
+# --------------------------------------------------
+# Android Fastlane lanes
+# --------------------------------------------------
+
+platform :android do
+
+  desc "Prepare next shared version (Patch / Minor / Major)"
+  lane :prepare_version do
+    current_version = algobot_version
+
+    UI.header("AlgoBot Version Preparation")
+    UI.message("Current version: #{current_version}")
+
+    choice = UI.select(
+      "Select release type:",
+      ["Patch", "Minor", "Major"]
+    )
+
+    release_type = {
+      "Patch" => "1",
+      "Minor" => "2",
+      "Major" => "3"
+    }.fetch(choice)
+
+    unless UI.confirm("Update version using #{choice}?")
+      UI.message("Version preparation cancelled.")
+      next
+    end
+
+    Dir.chdir(ROOT_DIR) do
+      sh(
+        "bash scripts/bump_version.sh #{release_type}"
+      )
+    end
+
+    UI.success(
+      "New shared version: #{algobot_version}"
+    )
+
+    UI.message(
+      "Prepare release notes and iOS promotional texts."
+    )
+  end
+
+  desc "Build Flutter Android App Bundle"
+  lane :build do
+    Dir.chdir(ROOT_DIR) do
+      sh("flutter pub get")
+      sh("flutter build appbundle --release")
+    end
+
+    algobot_verify_aab
+
+    UI.success(
+      "Android AAB build completed!"
+    )
+  end
+
+  desc "Validate Android release metadata"
+  lane :check_release do
+    version = algobot_version
+    notes = algobot_notes(version)
+
+    UI.header("AlgoBot Android Release Validation")
+    UI.message("Version: #{version}")
+
+    notes.each do |locale, content|
+      UI.message("#{locale}: #{content}")
+    end
+
+    UI.success(
+      "Android release metadata validated!"
+    )
+  end
+
+  desc "Check Google Play for an existing build number"
+  lane :check_store_version do
+    algobot_check_google_play_version
+  end
+
+  desc "Verify the existing Android AAB"
+  lane :verify_aab do
+    algobot_verify_aab
+  end
+
+  desc "Upload existing AAB to Google Play Production"
+  lane :upload do
+    version = algobot_version
+    notes = algobot_notes(version)
+
+    # Verify actual AAB version and build number.
+    algobot_verify_aab
+
+    # Block builds found on checked Google Play tracks.
+    algobot_check_google_play_version
+
+    algobot_prepare_changelogs(version, notes)
+
+    UI.header("AlgoBot Google Play Upload")
+    UI.message("Version: #{version}")
+    UI.message("Track: production")
+    UI.message("AAB: #{AAB_PATH}")
+
+    unless UI.confirm(
+      "Upload this AAB to Google Play Production?"
+    )
+      UI.message("Android upload cancelled.")
+      next
+    end
+
+    upload_to_play_store(
+      track: "production",
+      aab: AAB_PATH,
+      release_status: "completed",
+      metadata_path: METADATA_PATH,
+      skip_upload_metadata: true,
+      skip_upload_changelogs: false,
+      skip_upload_images: true,
+      skip_upload_screenshots: true,
+      changes_not_sent_for_review: false
+    )
+
+    UI.success(
+      "AlgoBot Android Production upload completed!"
+    )
+  end
+
+  desc "Build and upload current shared version"
+  lane :release do
+    check_release
+    build
+    upload
+  end
+
+  desc "Retry uploading existing AAB without rebuilding"
+  lane :retry_release do
+    upload
+  end
+
+end
+
