@@ -51,7 +51,20 @@ case "$CHOICE" in
     ;;
 esac
 
-BUILD=$((BUILD + 1))
+# Optional second argument: explicit build number (e.g. one higher than
+# the highest build on both stores, see scripts/check_build_number.rb).
+# It must be greater than the current build number.
+NEXT_BUILD="${2:-}"
+
+if [[ -n "$NEXT_BUILD" ]]; then
+  if [[ ! "$NEXT_BUILD" =~ ^[0-9]+$ ]] || (( NEXT_BUILD <= BUILD )); then
+    echo "Invalid build number: $NEXT_BUILD (must be greater than $BUILD)"
+    exit 1
+  fi
+  BUILD="$NEXT_BUILD"
+else
+  BUILD=$((BUILD + 1))
+fi
 
 NEW_VERSION="$MAJOR.$MINOR.$PATCH+$BUILD"
 

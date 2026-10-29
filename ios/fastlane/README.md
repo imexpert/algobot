@@ -79,6 +79,14 @@ Retry upload using existing IPA
 
 Verify existing IPA version and bundle identifier
 
+### ios max_build_number
+
+```sh
+[bundle exec] fastlane ios max_build_number
+```
+
+Read-only: print the highest build number on App Store Connect
+
 ----
 
 This README.md is auto-generated and will be re-generated every time [_fastlane_](https://fastlane.tools) is run.

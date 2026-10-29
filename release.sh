@@ -121,9 +121,32 @@ upload_ios() {
   (cd "$IOS_DIR" && bundle exec fastlane ios upload)
 }
 
+usage() {
+  cat <<'USAGE'
+Usage: ./release.sh [--check]
+
+  (no option)  Validate, query stores, then build and upload after
+               per-platform confirmation.
+  --check      Dry run: validate requirements, release notes and store
+               status only. Never bumps, builds or uploads.
+USAGE
+}
+
 main() {
+  local check_only=false
+
+  case "${1:-}" in
+    "") ;;
+    --check|--dry-run) check_only=true ;;
+    -h|--help) usage; exit 0 ;;
+    *) usage; fail "Unknown option: $1" ;;
+  esac
+
   log "AlgoBot Unified Release"
   printf 'Shared version: %s\n' "$VERSION"
+  if [[ "$check_only" == true ]]; then
+    printf 'Mode: CHECK ONLY (no build, no upload)\n'
+  fi
 
   check_requirements
 
@@ -143,6 +166,16 @@ main() {
         "$ios_status" == "EXISTS" ]]; then
     log "Version already exists on both stores"
     printf 'No builds or uploads are necessary.\n'
+    exit 0
+  fi
+
+  if [[ "$check_only" == true ]]; then
+    printf '\nWould release:\n'
+    [[ "$android_status" == "AVAILABLE" ]] &&
+      printf '  Android: build + upload to Google Play Production\n'
+    [[ "$ios_status" == "AVAILABLE" ]] &&
+      printf '  iOS: build + upload to App Store Connect\n'
+    log "Check completed — nothing was built or uploaded"
     exit 0
   fi
 

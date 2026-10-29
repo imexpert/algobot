@@ -336,5 +336,27 @@ platform :ios do
     UI.success("iOS IPA verification completed!")
   end
 
-end
+  desc "Read-only: print the highest build number on App Store Connect"
+  lane :max_build_number do
+    algobot_api_key
 
+    begin
+      app = Spaceship::ConnectAPI::App.find(APP_IDENTIFIER)
+      UI.user_error!("App not found: #{APP_IDENTIFIER}") unless app
+
+      builds = Spaceship::ConnectAPI::Build.all(
+        app_id: app.id,
+        platform: "IOS"
+      )
+    rescue => error
+      UI.user_error!("App Store Connect API query failed: #{error.message}")
+    end
+
+    max_build = builds.map { |build| build.version.to_i }.max || 0
+
+    # Machine-readable line for scripts/check_build_number.rb
+    UI.important("ALGOBOT_MAX_BUILD=#{max_build}")
+  end
+
+
+end

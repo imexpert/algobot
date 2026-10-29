@@ -79,6 +79,14 @@ Build and upload current shared version
 
 Retry uploading existing AAB without rebuilding
 
+### android max_version_code
+
+```sh
+[bundle exec] fastlane android max_version_code
+```
+
+Read-only: print the highest versionCode on Google Play tracks
+
 ----
 
 This README.md is auto-generated and will be re-generated every time [_fastlane_](https://fastlane.tools) is run.

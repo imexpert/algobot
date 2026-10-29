@@ -336,5 +336,15 @@ platform :android do
     upload
   end
 
-end
+  desc "Read-only: print the highest versionCode on Google Play tracks"
+  lane :max_version_code do
+    codes = ["production", "beta", "alpha", "internal"].flat_map do |track|
+      google_play_track_version_codes(track: track).map(&:to_i)
+    end
 
+    # Machine-readable line for scripts/check_build_number.rb
+    UI.important("ALGOBOT_MAX_BUILD=#{codes.max || 0}")
+  end
+
+
+end
