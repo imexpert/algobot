@@ -7,18 +7,30 @@ import '../../core/colors.dart';
 import '../../l10n/l10n.dart';
 import '../../models/age_group.dart';
 import '../../data/session_repository.dart';
+import '../../review/review_service.dart';
 import '../../state/progress_controller.dart';
 import '../../state/settings_controller.dart';
 import 'app_button.dart';
 
 /// Ebeveyn kapısı: iki basamaklı toplama sorusu, doğru cevapta ayarlar.
+/// [verifyOnly] ise ayarlar açılmaz, doğru cevapta `true` ile kapanır.
 class ParentGateDialog extends StatefulWidget {
-  const ParentGateDialog({super.key});
+  const ParentGateDialog({super.key, this.verifyOnly = false});
+
+  final bool verifyOnly;
 
   static Future<void> show(BuildContext context) => showDialog<void>(
     context: context,
     builder: (_) => const ParentGateDialog(),
   );
+
+  /// Yalnızca kapı: ebeveyn doğru cevaplarsa true.
+  static Future<bool> verify(BuildContext context) async =>
+      await showDialog<bool>(
+        context: context,
+        builder: (_) => const ParentGateDialog(verifyOnly: true),
+      ) ??
+      false;
 
   @override
   State<ParentGateDialog> createState() => _ParentGateDialogState();
@@ -57,6 +69,10 @@ class _ParentGateDialogState extends State<ParentGateDialog> {
   }
 
   void _submit() {
+    if (widget.verifyOnly && int.tryParse(_input) == _a + _b) {
+      Navigator.pop(context, true);
+      return;
+    }
     setState(() {
       if (int.tryParse(_input) == _a + _b) {
         _unlocked = true;
@@ -310,6 +326,13 @@ class _SettingsPanelState extends State<_SettingsPanel> {
               style: TextStyle(color: AppColors.activeHighlight, fontSize: 14),
             ),
           ),
+        const SizedBox(height: 16),
+        AppButton(
+          label: context.l10n.rateApp,
+          primary: false,
+          icon: Icons.star_rounded,
+          onPressed: () => context.read<ReviewService>().openStore(),
+        ),
         const SizedBox(height: 16),
         Text(
           context.l10n.about,

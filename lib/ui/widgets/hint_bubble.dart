@@ -249,6 +249,7 @@ class _GlyphRow extends StatelessWidget {
       IntroGlyph.then => const Icon(Icons.arrow_forward, color: dark, size: 24),
       IntroGlyph.plus => const Icon(Icons.add, color: dark, size: 24),
       IntroGlyph.around => const Icon(Icons.alt_route, color: dark, size: 28),
+      IntroGlyph.repeat => LoopCard(icon: Icons.repeat, label: '×', size: size),
     };
   }
 }

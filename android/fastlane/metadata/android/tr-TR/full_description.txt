@@ -1,0 +1,10 @@
+AlgoBot, çocukların kodlama ve algoritmik düşünmenin temellerini eğlenceli oyunlarla keşfetmelerine yardımcı olan eğitici bir kodlama oyunudur.
+Çocuklar seviyeler boyunca ilerlerken komutları doğru sıraya koyar, karakterlerini hedefe ulaştırır ve farklı problemleri çözmek için kendi algoritmalarını oluşturur.
+AlgoBot ile çocuklar:
+• Kodlama mantığının temellerini keşfeder
+• Komutları doğru sıraya koymayı öğrenir
+• Algoritmik düşünme becerilerini geliştirir
+• Problem çözme ve planlama pratiği yapar
+• Eğlenceli seviyeleri tamamlayarak adım adım ilerler
+Oyun, çocukların karmaşık programlama dilleriyle uğraşmadan temel kodlama kavramlarını görsel ve etkileşimli bir şekilde öğrenmelerine yardımcı olmak üzere tasarlanmıştır.
+Düşün, planla, komutları sırala ve AlgoBot'u hedefe ulaştır!

@@ -44,6 +44,11 @@ extension L10nHelpers on AppLocalizations {
   };
 
   String ageRangeOf(AgeGroup age) => ageRange(age.name);
+
+  String worldName(int world) => switch (world) {
+    1 => world1Name,
+    _ => world2Name,
+  };
   String ageShortOf(AgeGroup age) => ageShort(age.name);
 
   String jokerLabel(JokerType type) => switch (type) {
@@ -64,5 +69,7 @@ extension L10nHelpers on AppLocalizations {
     GameMessage.stripFull => stripFull,
     GameMessage.lastLife => lastLife,
     GameMessage.videoFailed => videoFailed,
+    GameMessage.noCardToRepeat => noCardToRepeat,
+    GameMessage.maxRepeat => maxRepeat,
   };
 }

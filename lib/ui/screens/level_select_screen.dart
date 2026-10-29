@@ -49,7 +49,9 @@ class LevelSelectScreen extends StatelessWidget {
                       ),
                       Expanded(
                         child: Text(
-                          context.l10n.worldTitle(context.l10n.ageRangeOf(age)),
+                          context.l10n.levelSelectTitle(
+                            context.l10n.ageRangeOf(age),
+                          ),
                           style: const TextStyle(
                             color: AppColors.textPrimary,
                             fontSize: 22,
@@ -63,30 +65,54 @@ class LevelSelectScreen extends StatelessWidget {
                 Expanded(
                   child: CustomScrollView(
                     slivers: [
-                      SliverPadding(
-                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-                        sliver: SliverGrid(
-                          gridDelegate:
-                              SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: 2,
-                                mainAxisSpacing: 12,
-                                crossAxisSpacing: 12,
-                                mainAxisExtent:
-                                    150 *
-                                    max(
-                                      1.0,
-                                      MediaQuery.textScalerOf(
-                                            context,
-                                          ).scale(16) /
-                                          16,
-                                    ),
+                      // Her dünya için başlık ve seviye ızgarası.
+                      for (final world in {
+                        for (final l in levels) l.world,
+                      }) ...[
+                        SliverPadding(
+                          padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                          sliver: SliverToBoxAdapter(
+                            child: Semantics(
+                              header: true,
+                              child: Text(
+                                context.l10n.worldSection(
+                                  world,
+                                  context.l10n.worldName(world),
+                                ),
+                                style: const TextStyle(
+                                  color: AppColors.textSecondary,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w800,
+                                ),
                               ),
-                          delegate: SliverChildBuilderDelegate(
-                            (context, i) => _LevelCard(level: levels[i]),
-                            childCount: levels.length,
+                            ),
                           ),
                         ),
-                      ),
+                        SliverPadding(
+                          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                          sliver: SliverGrid(
+                            gridDelegate:
+                                SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: 2,
+                                  mainAxisSpacing: 12,
+                                  crossAxisSpacing: 12,
+                                  mainAxisExtent:
+                                      150 *
+                                      max(
+                                        1.0,
+                                        MediaQuery.textScalerOf(
+                                              context,
+                                            ).scale(16) /
+                                            16,
+                                      ),
+                                ),
+                            delegate: SliverChildListDelegate([
+                              for (final l in levels)
+                                if (l.world == world) _LevelCard(level: l),
+                            ]),
+                          ),
+                        ),
+                      ],
                       if (progress.worldCompleted(age))
                         const SliverPadding(
                           padding: EdgeInsets.fromLTRB(16, 0, 16, 16),
@@ -265,16 +291,16 @@ class _LevelCardState extends State<_LevelCard>
       child: Semantics(
         button: true,
         label: locked
-            ? l.levelCardLockedLabel(level.id, title)
+            ? l.levelCardLockedLabel(level.number, title)
             : noLives
-            ? l.levelCardNoLivesLabel(level.id, title, countdown)
+            ? l.levelCardNoLivesLabel(level.number, title, countdown)
             : skipped
-            ? l.levelCardSkippedLabel(level.id, title)
+            ? l.levelCardSkippedLabel(level.number, title)
             : lives < maxLives
             // Eksik canlar ekran okuyucuda da duyulsun.
-            ? '${l.levelCardLabel(level.id, title, stars)}, '
+            ? '${l.levelCardLabel(level.number, title, stars)}, '
                   '${l.livesLabel(lives)}'
-            : l.levelCardLabel(level.id, title, stars),
+            : l.levelCardLabel(level.number, title, stars),
         excludeSemantics: true,
         onTap: () => _onTap(locked),
         child: Material(
@@ -293,7 +319,7 @@ class _LevelCardState extends State<_LevelCard>
                   Row(
                     children: [
                       Text(
-                        '${level.id}',
+                        '${level.number}',
                         style: TextStyle(
                           color: fg ?? AppColors.textPrimary,
                           fontSize: 28,
@@ -304,26 +330,35 @@ class _LevelCardState extends State<_LevelCard>
                       if (locked)
                         Icon(Icons.lock, color: fg, size: 24)
                       else if (noLives)
-                        // Canı bitmiş: kırık kalp ve bir sonraki can.
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(
-                              Icons.heart_broken,
-                              color: LivesIndicator.filledColor,
-                              size: 20,
+                        // Canı bitmiş: kırık kalp ve bir sonraki can. Dar
+                        // kartta ve büyük yazıda sığması için küçülür.
+                        Flexible(
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.centerRight,
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Icons.heart_broken,
+                                  color: LivesIndicator.filledColor,
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 2),
+                                Text(
+                                  countdown,
+                                  style: const TextStyle(
+                                    color: AppColors.textPrimary,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w800,
+                                    fontFeatures: [
+                                      FontFeature.tabularFigures(),
+                                    ],
+                                  ),
+                                ),
+                              ],
                             ),
-                            const SizedBox(width: 2),
-                            Text(
-                              countdown,
-                              style: const TextStyle(
-                                color: AppColors.textPrimary,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w800,
-                                fontFeatures: [FontFeature.tabularFigures()],
-                              ),
-                            ),
-                          ],
+                          ),
                         )
                       else if (lives < maxLives)
                         Flexible(

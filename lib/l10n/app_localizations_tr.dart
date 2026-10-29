@@ -53,17 +53,12 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String worldTitle(String ageRange) {
-    return 'Dünya 1 · Fabrika · $ageRange';
-  }
-
-  @override
   String totalStars(int earned, int total) {
     return 'Yıldızların: $earned / $total';
   }
 
   @override
-  String get nextWorldTeaser => 'Dünya 2 yakında: Döngüler!';
+  String get nextWorldTeaser => 'Yeni dünyalar yakında!';
 
   @override
   String levelCardLabel(int id, String title, int stars) {
@@ -92,8 +87,8 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String levelHeader(int id) {
-    return 'Dünya 1 · Seviye $id';
+  String levelHeader(int world, int number) {
+    return 'Dünya $world · Seviye $number';
   }
 
   @override
@@ -445,7 +440,20 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get about =>
-      'AlgoBot, çocuklara programcı gibi düşünmeyi öğreten bir bulmaca oyunudur. Veri toplanmaz. İnternet bağlantısı gerekmez. Karakterler yalnızca oynayarak açılır; satın alma yoktur.';
+      'AlgoBot, çocuklara programcı gibi düşünmeyi öğreten bir bulmaca oyunudur. Veri toplanmaz. Oynamak için internet gerekmez. Karakterler yalnızca oynayarak açılır; satın alma yoktur.';
+
+  @override
+  String get rateApp => 'Uygulamayı değerlendir';
+
+  @override
+  String get reviewPromptTitle => 'Harika gidiyorsun! 💛';
+
+  @override
+  String get reviewPromptBody =>
+      'AlgoBot\'u sevdin mi? Bunu bir yetişkine göster. Uygulamayı mağazada değerlendirebilir.';
+
+  @override
+  String get reviewPromptParent => 'Ebeveyn';
 
   @override
   String get level57n01Title => 'Merhaba!';
@@ -600,4 +608,219 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get level13n08Intro =>
       'Anahtar, buz ve portal bir arada. Kartın tam yetecek kadar!';
+
+  @override
+  String get level57w2n01Title => 'Uzun yol';
+
+  @override
+  String get level57w2n01Intro =>
+      'Aynı oku tekrar tekrar koyma: Tekrarla ile ×5 yap!';
+
+  @override
+  String get level57w2n02Title => 'Derin kuyu';
+
+  @override
+  String get level57w2n02Intro => 'Aşağı ok, ama kaç kez?';
+
+  @override
+  String get level57w2n03Title => 'Uzun köşe';
+
+  @override
+  String get level57w2n03Intro =>
+      'Önce sağa, sonra aşağı. İkisini de tekrarla!';
+
+  @override
+  String get level57w2n04Title => 'Gizli hazine';
+
+  @override
+  String get level57w2n04Intro => 'Hazine yolun dışında. Önce ona git.';
+
+  @override
+  String get level57w2n05Title => 'Zikzak';
+
+  @override
+  String get level57w2n05Intro => 'Her basamakta iki adım.';
+
+  @override
+  String get level57w2n06Title => 'Büyük kare';
+
+  @override
+  String get level57w2n06Intro => 'İki hazine, iki ayrı köşede.';
+
+  @override
+  String get level57w2n07Title => 'Yılan';
+
+  @override
+  String get level57w2n07Intro => 'Uzun bir yol, ama az kart yeter.';
+
+  @override
+  String get level57w2n08Title => 'Montaj hattı';
+
+  @override
+  String get level57w2n08Intro => 'Hazineleri topla, kartları tekrarla!';
+
+  @override
+  String get level812w2n01Title => 'İlk döngü';
+
+  @override
+  String get level812w2n01Intro =>
+      'Tekrarla kartı, içindeki kartları birçok kez çalıştırır.';
+
+  @override
+  String get level812w2n02Title => 'Uzun dönemeç';
+
+  @override
+  String get level812w2n02Intro => 'Her uzun düzlük için bir döngü kullan.';
+
+  @override
+  String get level812w2n03Title => 'Merdiven';
+
+  @override
+  String get level812w2n03Intro =>
+      'Her basamak aynı hareketler. Bir kez yaz, tekrarla!';
+
+  @override
+  String get level812w2n04Title => 'Kare tur';
+
+  @override
+  String get level812w2n04Intro =>
+      'Hedef çok yakın, ama toplanacaklar köşelerde.';
+
+  @override
+  String get level812w2n05Title => 'İki döngü';
+
+  @override
+  String get level812w2n05Intro => 'Bir programda birden çok döngü olabilir.';
+
+  @override
+  String get level812w2n06Title => 'Hazineli merdiven';
+
+  @override
+  String get level812w2n06Intro =>
+      'Basamaklarda hazine var; döngü hepsini toplar.';
+
+  @override
+  String get level812w2n07Title => 'Büyük tur';
+
+  @override
+  String get level812w2n07Intro => 'Önce düşün: hangi kısım tekrar ediyor?';
+
+  @override
+  String get level812w2n08Title => 'Hattın sonu';
+
+  @override
+  String get level812w2n08Intro => 'Döngüleri ve tek kartları birlikte kullan.';
+
+  @override
+  String get level13w2n01Title => 'Sonsuz merdiven';
+
+  @override
+  String get level13w2n01Intro => 'Uzun merdiven, kısa program.';
+
+  @override
+  String get level13w2n02Title => 'Işınlı koridor';
+
+  @override
+  String get level13w2n02Intro => 'Döngü portaldan geçince de devam eder.';
+
+  @override
+  String get level13w2n03Title => 'Buz merdiveni';
+
+  @override
+  String get level13w2n03Intro => 'Buzda kaysan da döngü aynı kalır.';
+
+  @override
+  String get level13w2n04Title => 'Kilitli kare';
+
+  @override
+  String get level13w2n04Intro => 'Anahtar karenin bir köşesinde.';
+
+  @override
+  String get level13w2n05Title => 'Anahtarlı merdiven';
+
+  @override
+  String get level13w2n05Intro => 'Her bölüm için ayrı bir döngü düşün.';
+
+  @override
+  String get level13w2n06Title => 'Çifte tur';
+
+  @override
+  String get level13w2n06Intro =>
+      'Hazineler yolun dışında; en kısa yol işe yaramaz.';
+
+  @override
+  String get level13w2n07Title => 'Tarak';
+
+  @override
+  String get level13w2n07Intro =>
+      'Her dişte bir hazine. Tekrar eden deseni bul.';
+
+  @override
+  String get level13w2n08Title => 'Büyük final';
+
+  @override
+  String get level13w2n08Intro =>
+      'Buz, portal, anahtar ve döngüler. Kartın tam yetecek kadar!';
+
+  @override
+  String levelSelectTitle(String ageRange) {
+    return 'Seviyeler · $ageRange';
+  }
+
+  @override
+  String worldSection(int world, String name) {
+    return 'Dünya $world · $name';
+  }
+
+  @override
+  String get world1Name => 'Fabrika';
+
+  @override
+  String get world2Name => 'Montaj Hattı';
+
+  @override
+  String get cmdRepeat => 'Tekrarla';
+
+  @override
+  String get loopEndShort => 'Son';
+
+  @override
+  String loopCardLabel(int count) {
+    return '$count kez tekrarla';
+  }
+
+  @override
+  String get loopEndCardLabel => 'Döngü sonu';
+
+  @override
+  String get loopEndOpenLabel =>
+      'Döngü sonu, yeni kartlar içine giriyor. Kapatmak için dokun.';
+
+  @override
+  String multiplierCardLabel(String command, int times) {
+    return '$command ×$times. Silmek için dokun.';
+  }
+
+  @override
+  String get loopCountTitle => 'Kaç kez tekrarlansın?';
+
+  @override
+  String get removeLoop => 'Döngüyü kaldır';
+
+  @override
+  String stepInfoRound(
+    int step,
+    int total,
+    String command,
+    int round,
+    int rounds,
+  ) {
+    return 'Adım $step / $total · $command · tur $round/$rounds';
+  }
+
+  @override
+  String get noCardToRepeat => 'Önce bir ok kartı ekle';
+
+  @override
+  String get maxRepeat => 'En fazla ×5';
 }

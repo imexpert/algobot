@@ -1,0 +1,10 @@
+AlgoBot is an educational coding game designed to help kids discover the fundamentals of coding and algorithmic thinking through fun gameplay.
+As children progress through the levels, they arrange commands in the correct order, guide their character to the goal, and build algorithms to solve different challenges.
+With AlgoBot, kids can:
+• Discover the fundamentals of coding logic
+• Learn how to arrange commands in the correct order
+• Develop algorithmic thinking skills
+• Practice problem solving and planning
+• Progress step by step through fun challenges
+AlgoBot introduces fundamental coding concepts in a visual and interactive way, without requiring children to work with complex programming languages.
+Think, plan, arrange the commands, and guide AlgoBot to the goal!

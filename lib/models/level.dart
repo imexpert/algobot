@@ -5,6 +5,7 @@ import 'cell.dart';
 import 'command.dart';
 import 'direction.dart';
 import 'intro_glyph.dart';
+import 'program.dart';
 
 /// Bir seviyenin değişmez tanımı. Harita karakterleri:
 /// `R` başlangıç, `G` hedef, `B` toplanabilir, `K` anahtar (hepsi zemin),
@@ -20,9 +21,13 @@ class Level {
     required this.availableCommands,
     required this.maxSlots,
     required this.optimalLength,
-    required this.referenceSolution,
+    this.referenceSolution = const [],
+    this.referenceProgram,
+    this.world = 1,
+    int? number,
     this.introGlyphs = const [],
-  }) : assert(map.isNotEmpty, 'Harita boş olamaz'),
+  }) : number = number ?? id,
+       assert(map.isNotEmpty, 'Harita boş olamaz'),
        assert(
          map.every((row) => row.length == map.first.length),
          'Harita satırları aynı uzunlukta olmalı',
@@ -72,6 +77,22 @@ class Level {
   final int maxSlots;
   final int optimalLength;
   final List<Command> referenceSolution;
+
+  /// Döngülü referans çözüm (Dünya 2+). Yoksa [referenceSolution] kullanılır.
+  final List<Instruction>? referenceProgram;
+
+  /// Dünya (1: Fabrika, 2: Montaj Hattı). Dünya 2'den itibaren döngüler.
+  final int world;
+
+  /// Dünya içindeki sıra (ekranda "Seviye 3"). `id` yaş seti içinde
+  /// benzersiz kalır ve kayıt anahtarıdır.
+  final int number;
+
+  bool get allowsLoops => world >= 2;
+
+  /// Kart kart referans çözüm (şeritte görüneceği gibi).
+  List<Instruction> get solutionProgram =>
+      referenceProgram ?? [for (final c in referenceSolution) Move(c)];
 
   /// İpucu balonundaki görsel anlatım (5–7 yaş).
   final List<IntroGlyph> introGlyphs;

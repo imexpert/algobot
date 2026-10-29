@@ -1,0 +1,7 @@
+Yeni: Dünya 2 – Döngüler! Her yaş grubu için 8 yeni seviye. Yeni Tekrarla kartıyla hareketleri tekrarlatmayı öğrenin.
+• Ebeveyn alanından uygulamayı değerlendirebilirsiniz.
+• Tabletlerde yatay ekran desteği.
+• Seviye atlarken yaşanan takılma giderildi.
+• Canlar bitince program artık çalışmıyor.
+• Android'de pil kullanımı iyileştirildi.
+• Küçük ekranlarda görünüm düzeltmeleri ve genel iyileştirmeler.

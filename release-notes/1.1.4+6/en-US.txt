@@ -1,0 +1,1 @@
+Fixed an error that occurred when opening the app on some devices.

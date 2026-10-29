@@ -6,6 +6,7 @@ import 'app_services.dart';
 import 'audio/sound_service.dart';
 import 'core/colors.dart';
 import 'l10n/l10n.dart';
+import 'review/review_service.dart';
 import 'rewards/rewarded_video_service.dart';
 import 'state/settings_controller.dart';
 import 'ui/screens/home_screen.dart';
@@ -98,6 +99,7 @@ class _AlgoBotAppState extends State<AlgoBotApp> {
                     ChangeNotifierProvider.value(value: services.progress),
                     ChangeNotifierProvider.value(value: services.sessions),
                     Provider<RewardedVideoService>.value(value: services.video),
+                    Provider<ReviewService>.value(value: services.review),
                   ],
                   child: child,
                 ),

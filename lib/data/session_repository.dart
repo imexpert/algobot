@@ -4,8 +4,8 @@ import '../core/clock.dart';
 import '../jokers/joker_type.dart';
 import '../models/age_config.dart';
 import '../models/age_group.dart';
-import '../models/command.dart';
 import '../models/level.dart';
+import '../models/program.dart';
 import 'db/app_database.dart';
 import 'db/level_session_dao.dart';
 
@@ -24,13 +24,15 @@ class LevelSession {
   /// Can dolum hesabının başlangıcı; canlar tamsa null.
   final DateTime? lifeLostAt;
   final Set<JokerType> usedJokers;
-  final List<Command> program;
+
+  /// Şeritteki kartlar (döngüler ve çarpanlar dahil).
+  final List<Instruction> program;
 
   LevelSession copyWith({
     int? lives,
     DateTime? Function()? lifeLostAt,
     Set<JokerType>? usedJokers,
-    List<Command>? program,
+    List<Instruction>? program,
   }) => LevelSession(
     lives: lives ?? this.lives,
     lifeLostAt: lifeLostAt == null ? this.lifeLostAt : lifeLostAt(),
@@ -74,7 +76,7 @@ class SessionRepository extends ChangeNotifier {
             if (row.lifeUsed) JokerType.life,
             if (row.videoUsed) JokerType.video,
           },
-          program: _decode(row.program),
+          program: decodeProgram(row.program),
         );
       }
     } catch (e) {
@@ -168,7 +170,7 @@ class SessionRepository extends ChangeNotifier {
     _update(level, s.copyWith(usedJokers: {...s.usedJokers, type}));
   }
 
-  void saveProgram(Level level, List<Command> program) {
+  void saveProgram(Level level, List<Instruction> program) {
     final s = sessionFor(level);
     _update(level, s.copyWith(program: List.unmodifiable(program)));
   }
@@ -205,7 +207,7 @@ class SessionRepository extends ChangeNotifier {
         skipUsed: s.usedJokers.contains(JokerType.skip),
         lifeUsed: s.usedJokers.contains(JokerType.life),
         videoUsed: s.usedJokers.contains(JokerType.video),
-        program: s.program.map((c) => c.name).join(','),
+        program: encodeProgram(s.program),
         updatedAt: _clock.now().millisecondsSinceEpoch,
       ),
     ),
@@ -220,11 +222,6 @@ class SessionRepository extends ChangeNotifier {
       debugPrint('$what: $e');
     }
   }
-
-  static List<Command> _decode(String program) => [
-    for (final name in program.split(','))
-      ?Command.values.where((c) => c.name == name).firstOrNull,
-  ];
 }
 
 typedef LevelKeyString = String;

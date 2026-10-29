@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 
 import '../../core/colors.dart';
@@ -15,6 +17,7 @@ class CommandPalette extends StatelessWidget {
     required this.game,
     this.tutorialKey,
     this.tutorialCommand,
+    this.tutorialRepeat = false,
   });
 
   final GameController game;
@@ -24,6 +27,9 @@ class CommandPalette extends StatelessWidget {
 
   /// Anahtarın bağlanacağı komut; kart konumu komut türüne göre bulunur.
   final Command? tutorialCommand;
+
+  /// Eğitim parmağı Tekrarla kartını gösterir (Dünya 2'nin ilk seviyesi).
+  final bool tutorialRepeat;
 
   @override
   Widget build(BuildContext context) {
@@ -44,19 +50,40 @@ class CommandPalette extends StatelessWidget {
           child: AnimatedOpacity(
             opacity: locked ? 0.45 : 1,
             duration: const Duration(milliseconds: 200),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                for (final command in commands)
-                  _PaletteCard(
-                    key: command == (tutorialCommand ?? commands.first)
-                        ? tutorialKey
-                        : null,
-                    command: command,
-                    size: game.ageSettings.cardSize,
-                    onTap: () => game.addCommand(command),
-                  ),
-              ],
+            // Kartlar sığmazsa küçülür (en az 48 dp): 5–7 Dünya 2'de dört
+            // ok + Tekrarla.
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final count =
+                    commands.length + (game.level.allowsLoops ? 1 : 0);
+                const gap = 6.0;
+                final size = min(
+                  game.ageSettings.cardSize,
+                  max(48.0, (constraints.maxWidth - gap * (count - 1)) / count),
+                );
+                return Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    for (final command in commands)
+                      _PaletteCard(
+                        key:
+                            !tutorialRepeat &&
+                                command == (tutorialCommand ?? commands.first)
+                            ? tutorialKey
+                            : null,
+                        command: command,
+                        size: size,
+                        onTap: () => game.addCommand(command),
+                      ),
+                    if (game.level.allowsLoops)
+                      _RepeatCard(
+                        key: tutorialRepeat ? tutorialKey : null,
+                        size: size,
+                        onTap: () => game.addRepeat(),
+                      ),
+                  ],
+                );
+              },
             ),
           ),
         ),
@@ -98,6 +125,37 @@ class _PaletteCard extends StatelessWidget {
           onTap: onTap,
           child: CommandCard(command: command, size: size),
         ),
+      ),
+    );
+  }
+}
+
+/// Dünya 2: Tekrarla kartı. 5–7'de son kartın çarpanını artırır,
+/// 8–12/13+'da şeride döngü bloğu ekler.
+class _RepeatCard extends StatelessWidget {
+  const _RepeatCard({super.key, required this.onTap, required this.size});
+
+  final VoidCallback onTap;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final card = LoopCard(icon: Icons.repeat, label: l.cmdRepeat, size: size);
+    return Semantics(
+      container: true,
+      button: true,
+      label: l.paletteCardLabel(l.cmdRepeat),
+      excludeSemantics: true,
+      onTap: onTap,
+      child: Draggable<CardDrag>(
+        data: const RepeatDrag(),
+        feedback: Material(
+          type: MaterialType.transparency,
+          child: Transform.scale(scale: 1.1, child: card),
+        ),
+        childWhenDragging: Opacity(opacity: 0.5, child: card),
+        child: GestureDetector(onTap: onTap, child: card),
       ),
     );
   }

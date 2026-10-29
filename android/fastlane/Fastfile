@@ -1,0 +1,243 @@
+require "fileutils"
+
+default_platform(:android)
+
+# --------------------------------------------------
+# Paths
+# --------------------------------------------------
+
+ROOT_DIR = File.expand_path("../..", __dir__)
+
+NOTES_ROOT = File.join(
+  ROOT_DIR,
+  "release-notes"
+)
+
+METADATA_PATH = File.join(
+  __dir__,
+  "metadata",
+  "android"
+)
+
+AAB_PATH = File.join(
+  ROOT_DIR,
+  "build/app/outputs/bundle/release/app-release.aab"
+)
+
+# --------------------------------------------------
+# Read current version from pubspec.yaml
+# Example: 1.1.3+5
+# --------------------------------------------------
+
+def algobot_version
+  pubspec = File.join(ROOT_DIR, "pubspec.yaml")
+
+  line = File.readlines(pubspec).find do |item|
+    item.match?(/^version:\s*/)
+  end
+
+  UI.user_error!("Version not found!") unless line
+
+  version = line.split(":", 2).last.strip
+
+  unless version.match?(/\A\d+\.\d+\.\d+\+\d+\z/)
+    UI.user_error!("Invalid version: #{version}")
+  end
+
+  version
+end
+
+# --------------------------------------------------
+# Read release notes for current version
+# --------------------------------------------------
+
+def algobot_notes(version)
+  directory = File.join(NOTES_ROOT, version)
+  notes = {}
+
+  ["tr-TR", "en-US"].each do |locale|
+    path = File.join(directory, "#{locale}.txt")
+
+    unless File.file?(path)
+      UI.user_error!("Missing release notes: #{path}")
+    end
+
+    content = File.read(path, encoding: "UTF-8").strip
+
+    if content.empty?
+      UI.user_error!("#{locale}: Release notes cannot be empty!")
+    end
+
+    if content.length > 500
+      UI.user_error!("#{locale}: Maximum 500 characters!")
+    end
+
+    notes[locale] = content
+  end
+
+  notes
+end
+
+# --------------------------------------------------
+# Prepare Google Play changelogs
+# --------------------------------------------------
+
+def algobot_prepare_changelogs(version, notes)
+  version_code = version.split("+").last
+
+  notes.each do |locale, content|
+    directory = File.join(
+      METADATA_PATH,
+      locale,
+      "changelogs"
+    )
+
+    FileUtils.mkdir_p(directory)
+
+    File.write(
+      File.join(directory, "#{version_code}.txt"),
+      content + "\n",
+      encoding: "UTF-8"
+    )
+  end
+end
+
+# --------------------------------------------------
+# Android lanes
+# --------------------------------------------------
+
+platform :android do
+
+  # ------------------------------------------------
+  # Prepare next version
+  # ------------------------------------------------
+
+  desc "Prepare next version (Patch / Minor / Major)"
+  lane :prepare_version do
+
+    current_version = algobot_version
+
+    UI.header("AlgoBot Version Preparation")
+    UI.message("Current version: #{current_version}")
+
+    choice = UI.select(
+      "Select release type:",
+      ["Patch", "Minor", "Major"]
+    )
+
+    release_type = {
+      "Patch" => "1",
+      "Minor" => "2",
+      "Major" => "3"
+    }.fetch(choice)
+
+    confirmed = UI.confirm(
+      "Update version using #{choice}?"
+    )
+
+    unless confirmed
+      UI.message("Version preparation cancelled.")
+      next
+    end
+
+    Dir.chdir(ROOT_DIR) do
+      sh("bash scripts/bump_version.sh #{release_type}")
+    end
+
+    UI.success("New version: #{algobot_version}")
+    UI.message(
+      "Create release notes before running the release lane."
+    )
+  end
+
+  # ------------------------------------------------
+  # Build Flutter AAB
+  # ------------------------------------------------
+
+  desc "Build Flutter Android App Bundle"
+  lane :build do
+
+    Dir.chdir(ROOT_DIR) do
+      sh("flutter pub get")
+      sh("flutter build appbundle --release")
+    end
+
+    unless File.file?(AAB_PATH)
+      UI.user_error!("AAB file not found!")
+    end
+
+    UI.success("Android AAB build completed!")
+  end
+
+  # ------------------------------------------------
+  # Upload to Google Play Production
+  # ------------------------------------------------
+
+  desc "Submit prepared version to Google Play Production"
+  private_lane :submit_production do
+
+    upload_to_play_store(
+      track: "production",
+      aab: AAB_PATH,
+      release_status: "completed",
+      metadata_path: METADATA_PATH,
+      skip_upload_metadata: true,
+      skip_upload_changelogs: false,
+      skip_upload_images: true,
+      skip_upload_screenshots: true,
+      changes_not_sent_for_review: false
+    )
+
+    UI.success("AlgoBot Production release submitted!")
+  end
+
+  # ------------------------------------------------
+  # Release current version
+  # ------------------------------------------------
+
+  desc "Prepare and release current version"
+  lane :release do
+
+    version = algobot_version
+    notes = algobot_notes(version)
+
+    UI.header("AlgoBot Release Automation")
+    UI.message("Version: #{version}")
+
+    notes.each do |locale, content|
+      UI.message("#{locale}: #{content}")
+    end
+
+    algobot_prepare_changelogs(version, notes)
+
+    # Build first, ask for approval afterwards
+    build
+
+    UI.header("Final Production Approval")
+
+    UI.message("Build completed: #{version}")
+    UI.message("Track: production")
+    UI.message("Release status: completed")
+
+    confirmed = UI.confirm(
+      "All preparations completed. Publish to Google Play Production?"
+    )
+
+    unless confirmed
+      UI.message("Production upload cancelled.")
+      next
+    end
+
+    submit_production
+  end
+
+  # ------------------------------------------------
+  # Retry current version without version bump
+  # ------------------------------------------------
+
+  desc "Retry current version without bumping versionCode"
+  lane :retry_release do
+    release
+  end
+
+end

@@ -26,14 +26,6 @@
       }
     }
   },
-  "worldTitle": "World 1 · Factory · {ageRange}",
-  "@worldTitle": {
-    "placeholders": {
-      "ageRange": {
-        "type": "String"
-      }
-    }
-  },
   "totalStars": "Your stars: {earned} / {total}",
   "@totalStars": {
     "placeholders": {
@@ -45,7 +37,7 @@
       }
     }
   },
-  "nextWorldTeaser": "World 2 coming soon: Loops!",
+  "nextWorldTeaser": "More worlds coming soon!",
   "levelCardLabel": "Level {id}, {title}, {stars, plural, =0{no stars} =1{1 star} other{{stars} stars}}",
   "@levelCardLabel": {
     "placeholders": {
@@ -96,10 +88,13 @@
       }
     }
   },
-  "levelHeader": "World 1 · Level {id}",
+  "levelHeader": "World {world} · Level {number}",
   "@levelHeader": {
     "placeholders": {
-      "id": {
+      "world": {
+        "type": "int"
+      },
+      "number": {
         "type": "int"
       }
     }
@@ -364,7 +359,11 @@
   "cancel": "Cancel",
   "reset": "Reset",
   "resetDone": "Progress reset.",
-  "about": "AlgoBot is a puzzle game that teaches kids to think like programmers. No data collected. No internet needed. Characters unlock only by playing; there are no purchases.",
+  "about": "AlgoBot is a puzzle game that teaches kids to think like programmers. No data collected. No internet needed to play. Characters unlock only by playing; there are no purchases.",
+  "rateApp": "Rate the app",
+  "reviewPromptTitle": "You are doing great! 💛",
+  "reviewPromptBody": "Enjoying AlgoBot? Show this to a grown-up. They can rate the app in the store.",
+  "reviewPromptParent": "Grown-up",
   "level57n01Title": "Hello!",
   "level57n01Intro": "Tap the arrow card, then press the green button!",
   "level57n02Title": "Going Down",
@@ -412,5 +411,121 @@
   "level13n07Title": "Teleport!",
   "level13n07Intro": "Step into a portal and you pop out of the other one, facing the same way.",
   "level13n08Title": "The Final",
-  "level13n08Intro": "Keys, ice and portals all at once. You have exactly enough cards!"
+  "level13n08Intro": "Keys, ice and portals all at once. You have exactly enough cards!",
+  "level57w2n01Title": "Long Road",
+  "level57w2n01Intro": "Don't add the same arrow again and again: make it ×5 with Repeat!",
+  "level57w2n02Title": "Deep Well",
+  "level57w2n02Intro": "The down arrow, but how many times?",
+  "level57w2n03Title": "Long Corner",
+  "level57w2n03Intro": "Right, then down. Repeat them both!",
+  "level57w2n04Title": "Hidden Treasure",
+  "level57w2n04Intro": "The treasure is off the path. Get it first.",
+  "level57w2n05Title": "Zigzag",
+  "level57w2n05Intro": "Two steps on every stair.",
+  "level57w2n06Title": "Big Square",
+  "level57w2n06Intro": "Two treasures in two different corners.",
+  "level57w2n07Title": "The Snake",
+  "level57w2n07Intro": "A long way, but a few cards are enough.",
+  "level57w2n08Title": "Assembly Line",
+  "level57w2n08Intro": "Collect the treasures, repeat the cards!",
+  "level812w2n01Title": "First Loop",
+  "level812w2n01Intro": "The Repeat card runs the cards inside it many times.",
+  "level812w2n02Title": "Long Bend",
+  "level812w2n02Intro": "Use a loop for each long straight.",
+  "level812w2n03Title": "Staircase",
+  "level812w2n03Intro": "Every step is the same moves. Write them once, repeat!",
+  "level812w2n04Title": "Square Lap",
+  "level812w2n04Intro": "The goal is right there, but the treasures are in the corners.",
+  "level812w2n05Title": "Two Loops",
+  "level812w2n05Intro": "A program can have more than one loop.",
+  "level812w2n06Title": "Treasure Stairs",
+  "level812w2n06Intro": "There's treasure on the steps; a loop collects it all.",
+  "level812w2n07Title": "Grand Tour",
+  "level812w2n07Intro": "Think first: which part repeats?",
+  "level812w2n08Title": "End of the Line",
+  "level812w2n08Intro": "Mix loops and single cards.",
+  "level13w2n01Title": "Endless Stairs",
+  "level13w2n01Intro": "Long stairs, short program.",
+  "level13w2n02Title": "Portal Corridor",
+  "level13w2n02Intro": "A loop keeps going even through a portal.",
+  "level13w2n03Title": "Ice Stairs",
+  "level13w2n03Intro": "Sliding on ice doesn't change the loop.",
+  "level13w2n04Title": "Locked Square",
+  "level13w2n04Intro": "The key is on a corner of the square.",
+  "level13w2n05Title": "Key Stairs",
+  "level13w2n05Intro": "Think of a separate loop for each part.",
+  "level13w2n06Title": "Double Lap",
+  "level13w2n06Intro": "The treasures are off the path; the shortest way won't do.",
+  "level13w2n07Title": "The Comb",
+  "level13w2n07Intro": "A treasure in every tooth. Find the repeating pattern.",
+  "level13w2n08Title": "Grand Finale",
+  "level13w2n08Intro": "Ice, portals, keys and loops. You have exactly enough cards!",
+  "levelSelectTitle": "Levels · {ageRange}",
+  "@levelSelectTitle": {
+    "placeholders": {
+      "ageRange": {
+        "type": "String"
+      }
+    }
+  },
+  "worldSection": "World {world} · {name}",
+  "@worldSection": {
+    "placeholders": {
+      "world": {
+        "type": "int"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "world1Name": "Factory",
+  "world2Name": "Assembly Line",
+  "cmdRepeat": "Repeat",
+  "loopEndShort": "End",
+  "loopCardLabel": "Repeat {count} times",
+  "@loopCardLabel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "loopEndCardLabel": "End of loop",
+  "loopEndOpenLabel": "End of loop, new cards go inside. Tap to close.",
+  "multiplierCardLabel": "{command} ×{times}. Tap to remove.",
+  "@multiplierCardLabel": {
+    "placeholders": {
+      "command": {
+        "type": "String"
+      },
+      "times": {
+        "type": "int"
+      }
+    }
+  },
+  "loopCountTitle": "How many times?",
+  "removeLoop": "Remove loop",
+  "stepInfoRound": "Step {step} / {total} · {command} · round {round}/{rounds}",
+  "@stepInfoRound": {
+    "placeholders": {
+      "step": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      },
+      "command": {
+        "type": "String"
+      },
+      "round": {
+        "type": "int"
+      },
+      "rounds": {
+        "type": "int"
+      }
+    }
+  },
+  "noCardToRepeat": "Add an arrow card first",
+  "maxRepeat": "Up to ×5"
 }

@@ -28,5 +28,8 @@ Level _remap(Level level, String chars, String to) => Level(
   maxSlots: level.maxSlots,
   optimalLength: level.optimalLength,
   referenceSolution: level.referenceSolution,
+  referenceProgram: level.referenceProgram,
+  world: level.world,
+  number: level.number,
   introGlyphs: level.introGlyphs,
 );

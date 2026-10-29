@@ -13,6 +13,15 @@ enum PaletteMode {
   fullSet,
 }
 
+/// Dünya 2 döngü kartının biçimi.
+enum LoopStyle {
+  /// 5–7: tek kartı çarpanla tekrarlama (→ ×3).
+  multiplier,
+
+  /// 8–12 ve 13+: birden çok kartı saran Tekrarla [ … ] bloğu.
+  block,
+}
+
 /// Yaşa göre oyun ve arayüz ayarları.
 class AgeSettings {
   const AgeSettings({
@@ -21,6 +30,7 @@ class AgeSettings {
     required this.maxCell,
     required this.paletteMode,
     required this.commandSet,
+    required this.loopStyle,
     required this.moveMs,
   });
 
@@ -32,6 +42,8 @@ class AgeSettings {
 
   /// Yaş grubunun tam komut kümesi, palet sırasıyla.
   final List<Command> commandSet;
+
+  final LoopStyle loopStyle;
   final int moveMs;
 
   /// Seviye başına başlangıç canı; tüm yaş gruplarında aynı. Can jokeri
@@ -54,6 +66,7 @@ extension AgeGroupSettings on AgeGroup {
       cardSize: 64,
       maxCell: 88,
       paletteMode: PaletteMode.perLevel,
+      loopStyle: LoopStyle.multiplier,
       commandSet: [
         Command.moveUp,
         Command.moveDown,
@@ -67,6 +80,7 @@ extension AgeGroupSettings on AgeGroup {
       cardSize: 56,
       maxCell: 72,
       paletteMode: PaletteMode.fullSet,
+      loopStyle: LoopStyle.block,
       commandSet: [Command.forward, Command.turnRight, Command.turnLeft],
       moveMs: 400,
     ),
@@ -75,6 +89,7 @@ extension AgeGroupSettings on AgeGroup {
       cardSize: 48,
       maxCell: 56,
       paletteMode: PaletteMode.fullSet,
+      loopStyle: LoopStyle.block,
       commandSet: [Command.forward, Command.turnRight, Command.turnLeft],
       moveMs: 350,
     ),

@@ -3,6 +3,7 @@ import 'dart:math';
 import '../models/cell.dart';
 import '../models/command.dart';
 import '../models/level.dart';
+import '../models/program.dart';
 import 'run_result.dart';
 import 'sim_state.dart';
 
@@ -125,17 +126,24 @@ class Simulator {
     );
   }
 
-  static RunResult run(Level level, List<Command> program) {
+  /// Düz komut listesi (Dünya 1 ve testler).
+  static RunResult run(Level level, List<Command> program) =>
+      runProgram(level, [for (final c in program) Move(c)]);
+
+  /// Döngülü/çarpanlı programı açıp çalıştırır. Adımlar hangi karttan
+  /// geldiğini ([RunStep.index]) ve kaçıncı turda olduğunu bilir.
+  /// `programLength` şeritteki kart sayısıdır.
+  static RunResult runProgram(Level level, List<Instruction> program) {
     var state = initialState(level);
     final steps = <RunStep>[];
     var outcome = RunOutcome.stoppedShort;
 
-    for (var i = 0; i < program.length; i++) {
-      final r = step(level, state, program[i]);
+    for (final e in expandProgram(program)) {
+      final r = step(level, state, e.command);
       steps.add(
         RunStep(
-          index: i,
-          command: program[i],
+          index: e.token,
+          command: e.command,
           fromPosition: state.position,
           toPosition: r.state.position,
           fromDirection: state.direction,
@@ -145,6 +153,9 @@ class Simulator {
           keyCollected: r.keyCollected,
           crashed: r.crashed,
           reachedGoal: r.reachedGoal,
+          loopToken: e.loopToken,
+          iteration: e.iteration,
+          iterations: e.iterations,
         ),
       );
       state = r.state;

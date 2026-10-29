@@ -53,17 +53,12 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String worldTitle(String ageRange) {
-    return 'World 1 · Factory · $ageRange';
-  }
-
-  @override
   String totalStars(int earned, int total) {
     return 'Your stars: $earned / $total';
   }
 
   @override
-  String get nextWorldTeaser => 'World 2 coming soon: Loops!';
+  String get nextWorldTeaser => 'More worlds coming soon!';
 
   @override
   String levelCardLabel(int id, String title, int stars) {
@@ -93,8 +88,8 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String levelHeader(int id) {
-    return 'World 1 · Level $id';
+  String levelHeader(int world, int number) {
+    return 'World $world · Level $number';
   }
 
   @override
@@ -454,7 +449,20 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get about =>
-      'AlgoBot is a puzzle game that teaches kids to think like programmers. No data collected. No internet needed. Characters unlock only by playing; there are no purchases.';
+      'AlgoBot is a puzzle game that teaches kids to think like programmers. No data collected. No internet needed to play. Characters unlock only by playing; there are no purchases.';
+
+  @override
+  String get rateApp => 'Rate the app';
+
+  @override
+  String get reviewPromptTitle => 'You are doing great! 💛';
+
+  @override
+  String get reviewPromptBody =>
+      'Enjoying AlgoBot? Show this to a grown-up. They can rate the app in the store.';
+
+  @override
+  String get reviewPromptParent => 'Grown-up';
 
   @override
   String get level57n01Title => 'Hello!';
@@ -613,4 +621,218 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get level13n08Intro =>
       'Keys, ice and portals all at once. You have exactly enough cards!';
+
+  @override
+  String get level57w2n01Title => 'Long Road';
+
+  @override
+  String get level57w2n01Intro =>
+      'Don\'t add the same arrow again and again: make it ×5 with Repeat!';
+
+  @override
+  String get level57w2n02Title => 'Deep Well';
+
+  @override
+  String get level57w2n02Intro => 'The down arrow, but how many times?';
+
+  @override
+  String get level57w2n03Title => 'Long Corner';
+
+  @override
+  String get level57w2n03Intro => 'Right, then down. Repeat them both!';
+
+  @override
+  String get level57w2n04Title => 'Hidden Treasure';
+
+  @override
+  String get level57w2n04Intro => 'The treasure is off the path. Get it first.';
+
+  @override
+  String get level57w2n05Title => 'Zigzag';
+
+  @override
+  String get level57w2n05Intro => 'Two steps on every stair.';
+
+  @override
+  String get level57w2n06Title => 'Big Square';
+
+  @override
+  String get level57w2n06Intro => 'Two treasures in two different corners.';
+
+  @override
+  String get level57w2n07Title => 'The Snake';
+
+  @override
+  String get level57w2n07Intro => 'A long way, but a few cards are enough.';
+
+  @override
+  String get level57w2n08Title => 'Assembly Line';
+
+  @override
+  String get level57w2n08Intro => 'Collect the treasures, repeat the cards!';
+
+  @override
+  String get level812w2n01Title => 'First Loop';
+
+  @override
+  String get level812w2n01Intro =>
+      'The Repeat card runs the cards inside it many times.';
+
+  @override
+  String get level812w2n02Title => 'Long Bend';
+
+  @override
+  String get level812w2n02Intro => 'Use a loop for each long straight.';
+
+  @override
+  String get level812w2n03Title => 'Staircase';
+
+  @override
+  String get level812w2n03Intro =>
+      'Every step is the same moves. Write them once, repeat!';
+
+  @override
+  String get level812w2n04Title => 'Square Lap';
+
+  @override
+  String get level812w2n04Intro =>
+      'The goal is right there, but the treasures are in the corners.';
+
+  @override
+  String get level812w2n05Title => 'Two Loops';
+
+  @override
+  String get level812w2n05Intro => 'A program can have more than one loop.';
+
+  @override
+  String get level812w2n06Title => 'Treasure Stairs';
+
+  @override
+  String get level812w2n06Intro =>
+      'There\'s treasure on the steps; a loop collects it all.';
+
+  @override
+  String get level812w2n07Title => 'Grand Tour';
+
+  @override
+  String get level812w2n07Intro => 'Think first: which part repeats?';
+
+  @override
+  String get level812w2n08Title => 'End of the Line';
+
+  @override
+  String get level812w2n08Intro => 'Mix loops and single cards.';
+
+  @override
+  String get level13w2n01Title => 'Endless Stairs';
+
+  @override
+  String get level13w2n01Intro => 'Long stairs, short program.';
+
+  @override
+  String get level13w2n02Title => 'Portal Corridor';
+
+  @override
+  String get level13w2n02Intro => 'A loop keeps going even through a portal.';
+
+  @override
+  String get level13w2n03Title => 'Ice Stairs';
+
+  @override
+  String get level13w2n03Intro => 'Sliding on ice doesn\'t change the loop.';
+
+  @override
+  String get level13w2n04Title => 'Locked Square';
+
+  @override
+  String get level13w2n04Intro => 'The key is on a corner of the square.';
+
+  @override
+  String get level13w2n05Title => 'Key Stairs';
+
+  @override
+  String get level13w2n05Intro => 'Think of a separate loop for each part.';
+
+  @override
+  String get level13w2n06Title => 'Double Lap';
+
+  @override
+  String get level13w2n06Intro =>
+      'The treasures are off the path; the shortest way won\'t do.';
+
+  @override
+  String get level13w2n07Title => 'The Comb';
+
+  @override
+  String get level13w2n07Intro =>
+      'A treasure in every tooth. Find the repeating pattern.';
+
+  @override
+  String get level13w2n08Title => 'Grand Finale';
+
+  @override
+  String get level13w2n08Intro =>
+      'Ice, portals, keys and loops. You have exactly enough cards!';
+
+  @override
+  String levelSelectTitle(String ageRange) {
+    return 'Levels · $ageRange';
+  }
+
+  @override
+  String worldSection(int world, String name) {
+    return 'World $world · $name';
+  }
+
+  @override
+  String get world1Name => 'Factory';
+
+  @override
+  String get world2Name => 'Assembly Line';
+
+  @override
+  String get cmdRepeat => 'Repeat';
+
+  @override
+  String get loopEndShort => 'End';
+
+  @override
+  String loopCardLabel(int count) {
+    return 'Repeat $count times';
+  }
+
+  @override
+  String get loopEndCardLabel => 'End of loop';
+
+  @override
+  String get loopEndOpenLabel =>
+      'End of loop, new cards go inside. Tap to close.';
+
+  @override
+  String multiplierCardLabel(String command, int times) {
+    return '$command ×$times. Tap to remove.';
+  }
+
+  @override
+  String get loopCountTitle => 'How many times?';
+
+  @override
+  String get removeLoop => 'Remove loop';
+
+  @override
+  String stepInfoRound(
+    int step,
+    int total,
+    String command,
+    int round,
+    int rounds,
+  ) {
+    return 'Step $step / $total · $command · round $round/$rounds';
+  }
+
+  @override
+  String get noCardToRepeat => 'Add an arrow card first';
+
+  @override
+  String get maxRepeat => 'Up to ×5';
 }

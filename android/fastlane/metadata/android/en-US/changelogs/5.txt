@@ -1,0 +1,7 @@
+New: World 2 – Loops! 8 new levels for every age group. Learn to repeat moves with the new Repeat card.
+• Parents can now rate the app from the parent area.
+• Landscape support on tablets.
+• Fixed a freeze when skipping a level.
+• Programs no longer run when you are out of lives.
+• Improved battery use on Android.
+• Layout fixes for small screens and other improvements.

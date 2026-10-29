@@ -8,6 +8,7 @@ import 'package:algobot/jokers/joker_type.dart';
 import 'package:algobot/models/age_group.dart';
 import 'package:algobot/models/command.dart';
 import 'package:algobot/models/level.dart';
+import 'package:algobot/models/program.dart';
 import 'package:algobot/state/progress_controller.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -74,7 +75,8 @@ void main() {
       await sessions.load();
       final s = sessions.sessionFor(_lvl(AgeGroup.ages8to12, 4));
       expect(s.usedJokers, {JokerType.life});
-      expect(s.program, [Command.forward, Command.turnRight]);
+      // Eski biçim (yalnızca komut adları) aynen okunur.
+      expect(s.program, const [Move(Command.forward), Move(Command.turnRight)]);
     });
 
     test('Çözülünce oturum silinir; best_stars yalnızca artar', () async {
@@ -223,11 +225,21 @@ void main() {
       a
         ..loseLife(level)
         ..loseLife(level)
-        ..saveProgram(level, [Command.forward, Command.turnLeft]);
+        ..saveProgram(level, const [
+          LoopStart(3),
+          Move(Command.forward),
+          LoopEnd(),
+          Move(Command.turnLeft),
+        ]);
       await _flush();
       final b = await reopen();
       expect(b.sessionFor(level).lives, 1);
-      expect(b.sessionFor(level).program, [Command.forward, Command.turnLeft]);
+      expect(b.sessionFor(level).program, const [
+        LoopStart(3),
+        Move(Command.forward),
+        LoopEnd(),
+        Move(Command.turnLeft),
+      ]);
     });
 
     test('10 dakikada 1 can; 25 dakikada 2; başlangıcı aşmaz', () async {

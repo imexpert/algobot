@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart' show inMemoryDatabasePath;
@@ -7,6 +9,7 @@ import 'data/db/app_database.dart';
 import 'data/levels.dart';
 import 'data/progress_repository.dart';
 import 'data/session_repository.dart';
+import 'review/review_service.dart';
 import 'rewards/rewarded_video_service.dart';
 import 'rewards/stub_rewarded_video_service.dart';
 import 'state/progress_controller.dart';
@@ -17,21 +20,30 @@ class AppServices {
     required this.progress,
     required this.sessions,
     required this.video,
+    required this.review,
   });
 
   final ProgressController progress;
   final SessionRepository sessions;
   final RewardedVideoService video;
+  final ReviewService review;
 }
 
 /// Açılış animasyonuyla paralel yürüyen başlangıç işleri: veritabanı ve
-/// göçler, ilerleme ve oturumların yüklenmesi, seslerin önbelleğe alınması.
-/// 6 sn'yi aşarsa hata kaydedilir ve bellek içi veritabanıyla devam edilir.
+/// göçler, ilerleme ve oturumların yüklenmesi.
+///
+/// Seslerin önbelleğe alınması beklenmez (önbellek yalnızca hızlandırır;
+/// yavaş bir cihazda açılışı uzatıp veritabanını yedeğe düşürmesin).
+/// Veritabanı açılamazsa ya da [timeout] süresinde yüklenemezse hata
+/// kaydedilir ve bu oturum bellek içi veritabanıyla sürer. Bu durumda ilerleme
+/// diske yazılmaz; bu yüzden süre yalnızca takılmaya karşı bir güvencedir ve
+/// cömert tutulur.
 Future<AppServices> loadAppServices(
   SharedPreferences prefs,
   SoundService sound, {
-  Duration timeout = const Duration(seconds: 6),
+  Duration timeout = const Duration(seconds: 20),
 }) async {
+  unawaited(sound.preload());
   Future<AppServices> load(Future<AppDatabase> Function() openDb) async {
     final database = await openDb();
     final repository = ProgressRepository(database);
@@ -43,13 +55,13 @@ Future<AppServices> loadAppServices(
     // bitti panelinde gösterilmez. Açmak için `available: true` (ya da
     // gerçek reklam SDK'sı entegre edilince yalnızca bu satır değişir).
     final video = StubRewardedVideoService(available: false);
-    await Future.wait([
-      progress.load(),
-      sessions.load(),
-      sound.preload(),
-      video.preload(),
-    ]);
-    return AppServices(progress: progress, sessions: sessions, video: video);
+    await Future.wait([progress.load(), sessions.load(), video.preload()]);
+    return AppServices(
+      progress: progress,
+      sessions: sessions,
+      video: video,
+      review: ReviewService(prefs),
+    );
   }
 
   try {

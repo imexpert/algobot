@@ -1,0 +1,181 @@
+
+require "fileutils"
+
+default_platform(:android)
+
+ROOT_DIR = File.expand_path("../..", __dir__)
+
+AAB_PATH = File.join(
+  ROOT_DIR,
+  "build/app/outputs/bundle/release/app-release.aab"
+)
+
+METADATA_PATH = File.join(
+  __dir__,
+  "metadata",
+  "android"
+)
+
+platform :android do
+
+  desc "Build Flutter Android App Bundle"
+  lane :build do
+    Dir.chdir(ROOT_DIR) do
+      sh("flutter pub get")
+      sh("flutter build appbundle --release")
+    end
+
+    UI.user_error!(
+      "AAB file not found!"
+    ) unless File.file?(AAB_PATH)
+
+    UI.success("Android AAB build completed!")
+  end
+
+  desc "Upload current version to Production as draft"
+  lane :deploy do
+    build
+
+    upload_to_play_store(
+      track: "production",
+      aab: AAB_PATH,
+      release_status: "draft",
+      skip_upload_metadata: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true
+    )
+
+    UI.success("Production draft uploaded!")
+  end
+
+  desc "Release AlgoBot to Google Play Production"
+  lane :release do
+
+    UI.header("AlgoBot Release Automation")
+
+    # 1. Select version type
+    choice = UI.select(
+      "Select release type:",
+      ["Patch", "Minor", "Major"]
+    )
+
+    release_type = {
+      "Patch" => "1",
+      "Minor" => "2",
+      "Major" => "3"
+    }.fetch(choice)
+
+    # 2. Turkish release notes
+    UI.header("Release Notes")
+
+    tr_notes = UI.input(
+      "Turkce surum aciklamasi (tr-TR):"
+    ).strip
+
+    UI.user_error!(
+      "Turkce aciklama zorunludur!"
+    ) if tr_notes.empty?
+
+    # 3. English release notes
+    en_notes = UI.input(
+      "English release notes (en-US):"
+    ).strip
+
+    UI.user_error!(
+      "English notes are required!"
+    ) if en_notes.empty?
+
+    # 4. Show release summary
+    UI.header("Release Summary")
+
+    UI.message("Release type: #{choice}")
+    UI.message("TR: #{tr_notes}")
+    UI.message("EN: #{en_notes}")
+
+    # 5. Confirm before making changes
+    confirmed = UI.confirm(
+      "Build and submit to Google Play Production?"
+    )
+
+    unless confirmed
+      UI.message("Release cancelled.")
+      next
+    end
+
+    # 6. Increase version
+    Dir.chdir(ROOT_DIR) do
+      sh("bash scripts/bump_version.sh #{release_type}")
+    end
+
+    # 7. Read updated version from pubspec.yaml
+    version_line = File.readlines(
+      File.join(ROOT_DIR, "pubspec.yaml")
+    ).find { |line| line.match?(/^version:/) }
+
+    UI.user_error!(
+      "Version not found!"
+    ) unless version_line
+
+    version = version_line.split(":", 2).last.strip
+
+    version_code = version.split("+").last
+
+    UI.user_error!(
+      "Invalid versionCode!"
+    ) unless version_code.match?(/^\d+$/)
+
+    UI.message("New version: #{version}")
+    UI.message("Version code: #{version_code}")
+
+    # 8. Save release notes
+    {
+      "tr-TR" => tr_notes,
+      "en-US" => en_notes
+    }.each do |locale, notes|
+
+      changelog_dir = File.join(
+        METADATA_PATH,
+        locale,
+        "changelogs"
+      )
+
+      FileUtils.mkdir_p(changelog_dir)
+
+      changelog_file = File.join(
+        changelog_dir,
+        "#{version_code}.txt"
+      )
+
+      File.write(
+        changelog_file,
+        notes + "\n"
+      )
+
+      UI.message("Saved: #{changelog_file}")
+    end
+
+    UI.success("Version and release notes prepared!")
+
+    # 9. Build Flutter AAB
+    build
+
+    # 10. Upload to Google Play Production
+    upload_to_play_store(
+      track: "production",
+      aab: AAB_PATH,
+      release_status: "completed",
+      metadata_path: METADATA_PATH,
+      skip_upload_metadata: true,
+      skip_upload_changelogs: false,
+      skip_upload_images: true,
+      skip_upload_screenshots: true,
+      changes_not_sent_for_review: false
+    )
+
+    UI.success(
+      "AlgoBot Production release submitted successfully!"
+    )
+
+  end
+end
+

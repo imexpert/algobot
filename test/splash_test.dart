@@ -8,6 +8,7 @@ import 'package:algobot/data/levels.dart';
 import 'package:algobot/data/progress_repository.dart';
 import 'package:algobot/data/session_repository.dart';
 import 'package:algobot/l10n/l10n.dart';
+import 'package:algobot/review/review_service.dart';
 import 'package:algobot/rewards/stub_rewarded_video_service.dart';
 import 'package:algobot/state/progress_controller.dart';
 import 'package:algobot/state/settings_controller.dart';
@@ -19,6 +20,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'helpers/fake_review.dart';
 import 'helpers/test_db.dart';
 
 /// Gerçekten çalmadan çalınan sesleri kaydeden sahte ses servisi.
@@ -67,6 +69,7 @@ Future<_Splash> _boot(
     progress: progress,
     sessions: sessions,
     video: StubRewardedVideoService(available: false),
+    review: ReviewService(prefs, platform: FakeReviewPlatform()),
   );
   final loading = Completer<AppServices>();
   tester.view.physicalSize = const Size(360, 640) * 3;

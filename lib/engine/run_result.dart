@@ -27,6 +27,9 @@ class RunStep {
     this.keyCollected,
     this.crashed = false,
     this.reachedGoal = false,
+    this.loopToken,
+    this.iteration = 1,
+    this.iterations = 1,
   });
 
   /// Program şeridindeki kartın sırası.
@@ -47,6 +50,13 @@ class RunStep {
   final Point<int>? keyCollected;
   final bool crashed;
   final bool reachedGoal;
+
+  /// Döngü içindeyse döngü başı kartının sırası; çarpanlı kartta null.
+  final int? loopToken;
+
+  /// Kaçıncı tur / toplam tur (döngü ya da çarpan; tek komutta 1/1).
+  final int iteration;
+  final int iterations;
 }
 
 class RunResult {

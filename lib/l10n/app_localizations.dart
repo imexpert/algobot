@@ -158,12 +158,6 @@ abstract class AppLocalizations {
   /// **'{age, select, ages5to7{5–7} ages8to12{8–12} other{13+}}'**
   String ageShort(String age);
 
-  /// No description provided for @worldTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'World 1 · Factory · {ageRange}'**
-  String worldTitle(String ageRange);
-
   /// No description provided for @totalStars.
   ///
   /// In en, this message translates to:
@@ -173,7 +167,7 @@ abstract class AppLocalizations {
   /// No description provided for @nextWorldTeaser.
   ///
   /// In en, this message translates to:
-  /// **'World 2 coming soon: Loops!'**
+  /// **'More worlds coming soon!'**
   String get nextWorldTeaser;
 
   /// No description provided for @levelCardLabel.
@@ -203,8 +197,8 @@ abstract class AppLocalizations {
   /// No description provided for @levelHeader.
   ///
   /// In en, this message translates to:
-  /// **'World 1 · Level {id}'**
-  String levelHeader(int id);
+  /// **'World {world} · Level {number}'**
+  String levelHeader(int world, int number);
 
   /// No description provided for @program.
   ///
@@ -713,8 +707,32 @@ abstract class AppLocalizations {
   /// No description provided for @about.
   ///
   /// In en, this message translates to:
-  /// **'AlgoBot is a puzzle game that teaches kids to think like programmers. No data collected. No internet needed. Characters unlock only by playing; there are no purchases.'**
+  /// **'AlgoBot is a puzzle game that teaches kids to think like programmers. No data collected. No internet needed to play. Characters unlock only by playing; there are no purchases.'**
   String get about;
+
+  /// No description provided for @rateApp.
+  ///
+  /// In en, this message translates to:
+  /// **'Rate the app'**
+  String get rateApp;
+
+  /// No description provided for @reviewPromptTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'You are doing great! 💛'**
+  String get reviewPromptTitle;
+
+  /// No description provided for @reviewPromptBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Enjoying AlgoBot? Show this to a grown-up. They can rate the app in the store.'**
+  String get reviewPromptBody;
+
+  /// No description provided for @reviewPromptParent.
+  ///
+  /// In en, this message translates to:
+  /// **'Grown-up'**
+  String get reviewPromptParent;
 
   /// No description provided for @level57n01Title.
   ///
@@ -1003,6 +1021,390 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Keys, ice and portals all at once. You have exactly enough cards!'**
   String get level13n08Intro;
+
+  /// No description provided for @level57w2n01Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Long Road'**
+  String get level57w2n01Title;
+
+  /// No description provided for @level57w2n01Intro.
+  ///
+  /// In en, this message translates to:
+  /// **'Don\'t add the same arrow again and again: make it ×5 with Repeat!'**
+  String get level57w2n01Intro;
+
+  /// No description provided for @level57w2n02Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Deep Well'**
+  String get level57w2n02Title;
+
+  /// No description provided for @level57w2n02Intro.
+  ///
+  /// In en, this message translates to:
+  /// **'The down arrow, but how many times?'**
+  String get level57w2n02Intro;
+
+  /// No description provided for @level57w2n03Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Long Corner'**
+  String get level57w2n03Title;
+
+  /// No description provided for @level57w2n03Intro.
+  ///
+  /// In en, this message translates to:
+  /// **'Right, then down. Repeat them both!'**
+  String get level57w2n03Intro;
+
+  /// No description provided for @level57w2n04Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Hidden Treasure'**
+  String get level57w2n04Title;
+
+  /// No description provided for @level57w2n04Intro.
+  ///
+  /// In en, this message translates to:
+  /// **'The treasure is off the path. Get it first.'**
+  String get level57w2n04Intro;
+
+  /// No description provided for @level57w2n05Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Zigzag'**
+  String get level57w2n05Title;
+
+  /// No description provided for @level57w2n05Intro.
+  ///
+  /// In en, this message translates to:
+  /// **'Two steps on every stair.'**
+  String get level57w2n05Intro;
+
+  /// No description provided for @level57w2n06Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Big Square'**
+  String get level57w2n06Title;
+
+  /// No description provided for @level57w2n06Intro.
+  ///
+  /// In en, this message translates to:
+  /// **'Two treasures in two different corners.'**
+  String get level57w2n06Intro;
+
+  /// No description provided for @level57w2n07Title.
+  ///
+  /// In en, this message translates to:
+  /// **'The Snake'**
+  String get level57w2n07Title;
+
+  /// No description provided for @level57w2n07Intro.
+  ///
+  /// In en, this message translates to:
+  /// **'A long way, but a few cards are enough.'**
+  String get level57w2n07Intro;
+
+  /// No description provided for @level57w2n08Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Assembly Line'**
+  String get level57w2n08Title;
+
+  /// No description provided for @level57w2n08Intro.
+  ///
+  /// In en, this message translates to:
+  /// **'Collect the treasures, repeat the cards!'**
+  String get level57w2n08Intro;
+
+  /// No description provided for @level812w2n01Title.
+  ///
+  /// In en, this message translates to:
+  /// **'First Loop'**
+  String get level812w2n01Title;
+
+  /// No description provided for @level812w2n01Intro.
+  ///
+  /// In en, this message translates to:
+  /// **'The Repeat card runs the cards inside it many times.'**
+  String get level812w2n01Intro;
+
+  /// No description provided for @level812w2n02Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Long Bend'**
+  String get level812w2n02Title;
+
+  /// No description provided for @level812w2n02Intro.
+  ///
+  /// In en, this message translates to:
+  /// **'Use a loop for each long straight.'**
+  String get level812w2n02Intro;
+
+  /// No description provided for @level812w2n03Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Staircase'**
+  String get level812w2n03Title;
+
+  /// No description provided for @level812w2n03Intro.
+  ///
+  /// In en, this message translates to:
+  /// **'Every step is the same moves. Write them once, repeat!'**
+  String get level812w2n03Intro;
+
+  /// No description provided for @level812w2n04Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Square Lap'**
+  String get level812w2n04Title;
+
+  /// No description provided for @level812w2n04Intro.
+  ///
+  /// In en, this message translates to:
+  /// **'The goal is right there, but the treasures are in the corners.'**
+  String get level812w2n04Intro;
+
+  /// No description provided for @level812w2n05Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Two Loops'**
+  String get level812w2n05Title;
+
+  /// No description provided for @level812w2n05Intro.
+  ///
+  /// In en, this message translates to:
+  /// **'A program can have more than one loop.'**
+  String get level812w2n05Intro;
+
+  /// No description provided for @level812w2n06Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Treasure Stairs'**
+  String get level812w2n06Title;
+
+  /// No description provided for @level812w2n06Intro.
+  ///
+  /// In en, this message translates to:
+  /// **'There\'s treasure on the steps; a loop collects it all.'**
+  String get level812w2n06Intro;
+
+  /// No description provided for @level812w2n07Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Grand Tour'**
+  String get level812w2n07Title;
+
+  /// No description provided for @level812w2n07Intro.
+  ///
+  /// In en, this message translates to:
+  /// **'Think first: which part repeats?'**
+  String get level812w2n07Intro;
+
+  /// No description provided for @level812w2n08Title.
+  ///
+  /// In en, this message translates to:
+  /// **'End of the Line'**
+  String get level812w2n08Title;
+
+  /// No description provided for @level812w2n08Intro.
+  ///
+  /// In en, this message translates to:
+  /// **'Mix loops and single cards.'**
+  String get level812w2n08Intro;
+
+  /// No description provided for @level13w2n01Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Endless Stairs'**
+  String get level13w2n01Title;
+
+  /// No description provided for @level13w2n01Intro.
+  ///
+  /// In en, this message translates to:
+  /// **'Long stairs, short program.'**
+  String get level13w2n01Intro;
+
+  /// No description provided for @level13w2n02Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Portal Corridor'**
+  String get level13w2n02Title;
+
+  /// No description provided for @level13w2n02Intro.
+  ///
+  /// In en, this message translates to:
+  /// **'A loop keeps going even through a portal.'**
+  String get level13w2n02Intro;
+
+  /// No description provided for @level13w2n03Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Ice Stairs'**
+  String get level13w2n03Title;
+
+  /// No description provided for @level13w2n03Intro.
+  ///
+  /// In en, this message translates to:
+  /// **'Sliding on ice doesn\'t change the loop.'**
+  String get level13w2n03Intro;
+
+  /// No description provided for @level13w2n04Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Locked Square'**
+  String get level13w2n04Title;
+
+  /// No description provided for @level13w2n04Intro.
+  ///
+  /// In en, this message translates to:
+  /// **'The key is on a corner of the square.'**
+  String get level13w2n04Intro;
+
+  /// No description provided for @level13w2n05Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Key Stairs'**
+  String get level13w2n05Title;
+
+  /// No description provided for @level13w2n05Intro.
+  ///
+  /// In en, this message translates to:
+  /// **'Think of a separate loop for each part.'**
+  String get level13w2n05Intro;
+
+  /// No description provided for @level13w2n06Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Double Lap'**
+  String get level13w2n06Title;
+
+  /// No description provided for @level13w2n06Intro.
+  ///
+  /// In en, this message translates to:
+  /// **'The treasures are off the path; the shortest way won\'t do.'**
+  String get level13w2n06Intro;
+
+  /// No description provided for @level13w2n07Title.
+  ///
+  /// In en, this message translates to:
+  /// **'The Comb'**
+  String get level13w2n07Title;
+
+  /// No description provided for @level13w2n07Intro.
+  ///
+  /// In en, this message translates to:
+  /// **'A treasure in every tooth. Find the repeating pattern.'**
+  String get level13w2n07Intro;
+
+  /// No description provided for @level13w2n08Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Grand Finale'**
+  String get level13w2n08Title;
+
+  /// No description provided for @level13w2n08Intro.
+  ///
+  /// In en, this message translates to:
+  /// **'Ice, portals, keys and loops. You have exactly enough cards!'**
+  String get level13w2n08Intro;
+
+  /// No description provided for @levelSelectTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Levels · {ageRange}'**
+  String levelSelectTitle(String ageRange);
+
+  /// No description provided for @worldSection.
+  ///
+  /// In en, this message translates to:
+  /// **'World {world} · {name}'**
+  String worldSection(int world, String name);
+
+  /// No description provided for @world1Name.
+  ///
+  /// In en, this message translates to:
+  /// **'Factory'**
+  String get world1Name;
+
+  /// No description provided for @world2Name.
+  ///
+  /// In en, this message translates to:
+  /// **'Assembly Line'**
+  String get world2Name;
+
+  /// No description provided for @cmdRepeat.
+  ///
+  /// In en, this message translates to:
+  /// **'Repeat'**
+  String get cmdRepeat;
+
+  /// No description provided for @loopEndShort.
+  ///
+  /// In en, this message translates to:
+  /// **'End'**
+  String get loopEndShort;
+
+  /// No description provided for @loopCardLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Repeat {count} times'**
+  String loopCardLabel(int count);
+
+  /// No description provided for @loopEndCardLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'End of loop'**
+  String get loopEndCardLabel;
+
+  /// No description provided for @loopEndOpenLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'End of loop, new cards go inside. Tap to close.'**
+  String get loopEndOpenLabel;
+
+  /// No description provided for @multiplierCardLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'{command} ×{times}. Tap to remove.'**
+  String multiplierCardLabel(String command, int times);
+
+  /// No description provided for @loopCountTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'How many times?'**
+  String get loopCountTitle;
+
+  /// No description provided for @removeLoop.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove loop'**
+  String get removeLoop;
+
+  /// No description provided for @stepInfoRound.
+  ///
+  /// In en, this message translates to:
+  /// **'Step {step} / {total} · {command} · round {round}/{rounds}'**
+  String stepInfoRound(
+    int step,
+    int total,
+    String command,
+    int round,
+    int rounds,
+  );
+
+  /// No description provided for @noCardToRepeat.
+  ///
+  /// In en, this message translates to:
+  /// **'Add an arrow card first'**
+  String get noCardToRepeat;
+
+  /// No description provided for @maxRepeat.
+  ///
+  /// In en, this message translates to:
+  /// **'Up to ×5'**
+  String get maxRepeat;
 }
 
 class _AppLocalizationsDelegate

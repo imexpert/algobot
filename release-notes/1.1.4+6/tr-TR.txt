@@ -1,0 +1,1 @@
+Bazı cihazlarda uygulama açılırken oluşan hata giderildi.

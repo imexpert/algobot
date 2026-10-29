@@ -10,6 +10,8 @@ import 'package:algobot/l10n/l10n.dart';
 import 'package:algobot/models/age_group.dart';
 import 'package:algobot/models/command.dart';
 import 'package:algobot/models/level.dart';
+import 'package:algobot/models/program.dart';
+import 'package:algobot/review/review_service.dart';
 import 'package:algobot/rewards/rewarded_video_service.dart';
 import 'package:algobot/rewards/stub_rewarded_video_service.dart';
 import 'package:algobot/state/progress_controller.dart';
@@ -25,6 +27,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'helpers/fake_review.dart';
 import 'helpers/test_db.dart';
 
 final en = lookupAppLocalizations(const Locale('en'));
@@ -69,6 +72,7 @@ Future<_App> _setUp(
   RewardedVideoService? video,
   AppDatabase? database,
   FakeClock? clock,
+  FakeReviewPlatform? review,
 }) async {
   // Testlerde efekt sesleri kapalı: ses eklentisi test ortamında yok.
   SharedPreferences.setMockInitialValues({
@@ -110,6 +114,11 @@ Future<_App> _setUp(
           progress: progress,
           sessions: sessions,
           video: video ?? StubRewardedVideoService(available: false),
+          review: ReviewService(
+            sp,
+            platform: review ?? FakeReviewPlatform(),
+            clock: c,
+          ),
         ),
       ),
       showSplash: false,
@@ -179,6 +188,23 @@ Future<void> _run(WidgetTester tester, Level level) async {
   await _settle(tester, _runtime(level));
 }
 
+/// Ebeveyn kapısındaki toplama sorusunu doğru cevaplar.
+Future<void> _solveGate(WidgetTester tester, AppLocalizations l) async {
+  final pattern = RegExp(r'(\d+) \+ (\d+)');
+  final q = tester
+      .widgetList<Text>(find.byType(Text))
+      .map((t) => t.data ?? '')
+      .firstWhere(pattern.hasMatch);
+  final m = pattern.firstMatch(q)!;
+  expect(q, l.parentQuestion(int.parse(m[1]!), int.parse(m[2]!)));
+  for (final d in '${int.parse(m[1]!) + int.parse(m[2]!)}'.split('')) {
+    await tester.tap(find.text(d).last);
+    await tester.pump();
+  }
+  await tester.tap(find.text(l.ok));
+  await _settle(tester, 500);
+}
+
 Finder _lives(int n, [AppLocalizations? l]) =>
     find.bySemanticsLabel((l ?? en).livesLabel(n));
 
@@ -199,13 +225,17 @@ void main() {
               size: entry.value,
               textScale: scale,
               video: FakeVideo(RewardedVideoResult.completed),
-              stars: {for (var i = 1; i <= 8; i++) (age, i): 2},
+              stars: {for (var i = 1; i <= 16; i++) (age, i): 2},
             );
             expect(find.bySemanticsLabel(l.appTitle), findsOneWidget);
             await tester.tap(find.text(l.play));
             await _settle(tester, 800);
-            expect(find.text(l.worldTitle(l.ageRangeOf(age))), findsOneWidget);
-            expect(find.text(l.totalStars(16, 24)), findsOneWidget);
+            expect(
+              find.text(l.levelSelectTitle(l.ageRangeOf(age))),
+              findsOneWidget,
+            );
+            expect(find.text(l.worldSection(1, l.world1Name)), findsOneWidget);
+            expect(find.text(l.totalStars(32, 48)), findsOneWidget);
 
             for (final level in levelsFor(age)) {
               await _openLevel(tester, level);
@@ -305,6 +335,154 @@ void main() {
     });
   });
 
+  group('Dünya 2 · Döngüler', () {
+    Finder repeatCard() =>
+        find.bySemanticsLabel(en.paletteCardLabel(en.cmdRepeat));
+
+    Future<List<Instruction>> savedProgram(
+      WidgetTester tester,
+      _App app,
+      Level level,
+    ) async {
+      await _settle(tester, 400); // 300 ms kayıt gecikmesi
+      return app.sessions.sessionFor(level).program;
+    }
+
+    testWidgets('8–12: Tekrarla bloğu, tur seçimi, tur bilgisi, 3 yıldız', (
+      tester,
+    ) async {
+      final app = await _setUp(tester);
+      final level = _lvl(AgeGroup.ages8to12, 9); // R....G, 3 kart
+      await _openLevel(tester, level);
+      expect(find.text(en.levelHeader(2, 1)), findsOneWidget);
+      await tester.tap(find.text(en.levelIntro(level)));
+
+      await _tap(tester, repeatCard());
+      await _settle(tester, 300);
+      expect(find.text(en.slotCounter(2, 3)), findsOneWidget);
+      // Açık döngü: yeni kart içine girer.
+      await _tap(tester, _card(en, Command.forward));
+      await _settle(tester, 300);
+      expect(await savedProgram(tester, app, level), const [
+        LoopStart(2),
+        Move(Command.forward),
+        LoopEnd(),
+      ]);
+
+      // Tur sayısı: ×5.
+      await _tap(tester, find.bySemanticsLabel(en.loopCardLabel(2)));
+      await _settle(tester, 500);
+      expect(find.text(en.loopCountTitle), findsOneWidget);
+      await tester.tap(find.text('×5').last);
+      await _settle(tester, 500);
+      expect(find.bySemanticsLabel(en.loopCardLabel(5)), findsOneWidget);
+
+      await _tap(tester, find.text(en.run));
+      await _settle(tester, 1200);
+      expect(find.textContaining('round'), findsOneWidget);
+      await _settle(tester, 4000);
+      expect(find.text(en.resultThreeStars), findsOneWidget);
+      expect(app.progress.starsFor(level), 3);
+      await tester.pumpWidget(const SizedBox());
+    });
+
+    testWidgets('8–12: döngüyü kapatma ve kaldırma', (tester) async {
+      final app = await _setUp(tester);
+      final level = _lvl(AgeGroup.ages8to12, 10);
+      await _openLevel(tester, level);
+      await tester.tap(find.text(en.levelIntro(level)));
+
+      await _tap(tester, repeatCard());
+      await _tap(tester, _card(en, Command.forward));
+      await _settle(tester, 300);
+      // Döngü sonuna dokun: kapanır; sonraki kart dışarı girer.
+      await _tap(tester, find.bySemanticsLabel(en.loopEndOpenLabel));
+      await _settle(tester, 300);
+      expect(find.bySemanticsLabel(en.loopEndCardLabel), findsOneWidget);
+      await _tap(tester, _card(en, Command.turnRight));
+      expect(await savedProgram(tester, app, level), const [
+        LoopStart(2),
+        Move(Command.forward),
+        LoopEnd(),
+        Move(Command.turnRight),
+      ]);
+
+      // Döngüyü kaldır: gövde şeritte kalır.
+      await _tap(tester, find.bySemanticsLabel(en.loopCardLabel(2)));
+      await _settle(tester, 500);
+      await tester.tap(find.text(en.removeLoop));
+      await _settle(tester, 500);
+      expect(await savedProgram(tester, app, level), const [
+        Move(Command.forward),
+        Move(Command.turnRight),
+      ]);
+      await tester.pumpWidget(const SizedBox());
+    });
+
+    testWidgets('5–7: çarpan, uyarılar ve 3 yıldız', (tester) async {
+      final app = await _setUp(tester, age: AgeGroup.ages5to7);
+      final level = _lvl(AgeGroup.ages5to7, 9); // R....G, →×5
+      await _openLevel(tester, level);
+      await tester.tap(find.text(en.levelIntro(level)));
+
+      await _tap(tester, repeatCard());
+      await tester.pump();
+      expect(find.text(en.noCardToRepeat), findsOneWidget);
+
+      await _tap(tester, _card(en, Command.moveRight));
+      for (var i = 0; i < 4; i++) {
+        await _tap(tester, repeatCard());
+        await tester.pump();
+      }
+      await _settle(tester, 300);
+      expect(
+        find.bySemanticsLabel(en.multiplierCardLabel(en.cmdMoveRight, 5)),
+        findsOneWidget,
+      );
+      expect(find.text(en.slotCounter(1, 2)), findsOneWidget);
+      await _tap(tester, repeatCard());
+      await tester.pump();
+      expect(find.text(en.maxRepeat), findsOneWidget);
+
+      await _settle(tester, 2500);
+      await _tap(tester, find.text(en.run));
+      await _settle(tester, 5000);
+      expect(find.text(en.resultThreeStars), findsOneWidget);
+      expect(app.progress.starsFor(level), 3);
+      await tester.pumpWidget(const SizedBox());
+    });
+
+    testWidgets('Seviye seçimi: Dünya 2 bölümü, Dünya 1 bitince açılır', (
+      tester,
+    ) async {
+      final app = await _setUp(tester);
+      final w2l1 = _lvl(AgeGroup.ages8to12, 9);
+      expect(app.progress.isUnlocked(w2l1), isFalse);
+      await tester.tap(find.text(en.play));
+      await _settle(tester, 800);
+      final header = find.text(en.worldSection(2, en.world2Name));
+      await tester.scrollUntilVisible(
+        header,
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.drag(find.byType(CustomScrollView), const Offset(0, -150));
+      await _settle(tester, 400);
+      expect(
+        find.bySemanticsLabel(en.levelCardLockedLabel(1, en.levelTitle(w2l1))),
+        findsOneWidget,
+      );
+      app.progress.markSkipped(_lvl(AgeGroup.ages8to12, 8));
+      await _settle(tester, 300);
+      expect(app.progress.isUnlocked(w2l1), isTrue);
+      expect(
+        find.bySemanticsLabel(en.levelCardLabel(1, en.levelTitle(w2l1), 0)),
+        findsOneWidget,
+      );
+      await tester.pumpWidget(const SizedBox());
+    });
+  });
+
   testWidgets('8–12 Seviye 1 baştan sona (Türkçe): 3 yıldız, Seviye 2 açılır', (
     tester,
   ) async {
@@ -350,7 +528,7 @@ void main() {
       age: AgeGroup.ages13plus,
       prefs: {'character_id': 'vizviz'},
     );
-    level = levelsFor(AgeGroup.ages13plus).last;
+    level = _lvl(AgeGroup.ages13plus, 8);
     await _openLevel(tester, level);
     await tester.tap(find.text(en.levelIntro(level)));
     await _addAll(tester, level.referenceSolution);
@@ -755,7 +933,7 @@ void main() {
     await tester.tap(find.text(en.start));
     await _settle(tester, 1000);
     expect(
-      find.text(en.worldTitle(en.ageRangeOf(AgeGroup.ages13plus))),
+      find.text(en.levelSelectTitle(en.ageRangeOf(AgeGroup.ages13plus))),
       findsOneWidget,
     );
     expect(app.settings.characterId, 'pati');
@@ -809,19 +987,7 @@ void main() {
       app.sessions.loseLife(_lvl(AgeGroup.ages8to12, 2));
       await tester.tap(find.byTooltip(l.parent));
       await _settle(tester, 500);
-      final pattern = RegExp(r'(\d+) \+ (\d+)');
-      final q = tester
-          .widgetList<Text>(find.byType(Text))
-          .map((t) => t.data ?? '')
-          .firstWhere(pattern.hasMatch);
-      final m = pattern.firstMatch(q)!;
-      expect(q, l.parentQuestion(int.parse(m[1]!), int.parse(m[2]!)));
-      for (final d in '${int.parse(m[1]!) + int.parse(m[2]!)}'.split('')) {
-        await tester.tap(find.text(d).last);
-        await tester.pump();
-      }
-      await tester.tap(find.text(l.ok));
-      await _settle(tester, 500);
+      await _solveGate(tester, l);
       expect(find.text(l.settings), findsOneWidget);
       expect(find.text(l.about), findsOneWidget);
 
@@ -835,4 +1001,88 @@ void main() {
       await tester.pumpWidget(const SizedBox());
     });
   }
+
+  group('Uygulamayı değerlendir', () {
+    testWidgets('Ebeveyn panelindeki buton mağaza sayfasını açar', (
+      tester,
+    ) async {
+      final review = FakeReviewPlatform();
+      await _setUp(tester, locale: const Locale('tr'), review: review);
+      await tester.tap(find.byTooltip(tr.parent));
+      await _settle(tester, 500);
+      await _solveGate(tester, tr);
+      await _tap(tester, find.text(tr.rateApp));
+      await _settle(tester, 300);
+      expect(review.storeOpened, 1);
+      expect(review.requested, 0);
+      await tester.pumpWidget(const SizedBox());
+    });
+
+    Future<void> finishWorldFinal(WidgetTester tester) async {
+      final level = _lvl(AgeGroup.ages8to12, 8);
+      await _openLevel(tester, level);
+      final intro = find.text(en.levelIntro(level));
+      if (intro.evaluate().isNotEmpty) await tester.tap(intro);
+      await _addAll(tester, level.referenceSolution);
+      await _run(tester, level);
+      expect(find.text(en.resultThreeStars), findsOneWidget);
+      await tester.tap(find.text(en.next));
+      await _settle(tester, 800);
+    }
+
+    testWidgets('Dünya bitince ebeveyne sorulur: kapı → sistem penceresi', (
+      tester,
+    ) async {
+      final review = FakeReviewPlatform();
+      final clock = FakeClock();
+      await _setUp(
+        tester,
+        clock: clock,
+        review: review,
+        prefs: {
+          ReviewService.firstSeenKey: clock
+              .now()
+              .subtract(const Duration(days: 4))
+              .millisecondsSinceEpoch,
+        },
+      );
+      await finishWorldFinal(tester);
+      expect(find.text(en.reviewPromptTitle), findsOneWidget);
+      await tester.tap(find.text(en.reviewPromptParent));
+      await _settle(tester, 500);
+      await _solveGate(tester, en);
+      expect(review.requested, 1);
+      expect(find.text(en.settings), findsNothing);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox());
+    });
+
+    testWidgets('"Sonra" kapatır; yeni kurulumda hiç sorulmaz', (tester) async {
+      final review = FakeReviewPlatform();
+      final clock = FakeClock();
+      await _setUp(
+        tester,
+        clock: clock,
+        review: review,
+        prefs: {
+          ReviewService.firstSeenKey: clock
+              .now()
+              .subtract(const Duration(days: 4))
+              .millisecondsSinceEpoch,
+        },
+      );
+      await finishWorldFinal(tester);
+      await tester.tap(find.text(en.later));
+      await _settle(tester, 500);
+      expect(find.text(en.reviewPromptTitle), findsNothing);
+      expect(review.requested, 0);
+      await tester.pumpWidget(const SizedBox());
+
+      // Yeni kurulum (3 gün dolmadı): soru çıkmaz.
+      await _setUp(tester, review: review);
+      await finishWorldFinal(tester);
+      expect(find.text(en.reviewPromptTitle), findsNothing);
+      await tester.pumpWidget(const SizedBox());
+    });
+  });
 }

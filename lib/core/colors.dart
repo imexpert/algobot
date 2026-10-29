@@ -49,6 +49,11 @@ abstract final class AppColors {
   static const portalOuter = Color(0xFF7F77DD);
   static const portalInner = Color(0xFFD4537E);
 
+  // Dünya 2 döngü kartları (Tekrarla). Mor 5–7'nin Sağ kartı, sarı etkin
+  // kart vurgusu olduğu için pembe.
+  static const loopCard = Color(0xFFD4537E);
+  static const loopIcon = Color(0xFFFBEAF0);
+
   /// Seçili karakter çerçevesi.
   static const selected = Color(0xFF5DCAA5);
 

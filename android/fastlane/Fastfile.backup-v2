@@ -1,0 +1,191 @@
+
+require "fileutils"
+
+default_platform(:android)
+
+ROOT_DIR = File.expand_path("../..", __dir__)
+METADATA_PATH = File.join(__dir__, "metadata", "android")
+AAB_PATH = File.join(
+  ROOT_DIR,
+  "build/app/outputs/bundle/release/app-release.aab"
+)
+
+def algobot_version
+  version_line = File.readlines(
+    File.join(ROOT_DIR, "pubspec.yaml")
+  ).find { |line| line.match?(/^version:/) }
+
+  UI.user_error!("Version not found!") unless version_line
+
+  version = version_line.split(":", 2).last.strip
+
+  UI.user_error!("Invalid version format!") unless
+    version.match?(/\A\d+\.\d+\.\d+\+\d+\z/)
+
+  version
+end
+
+def algobot_save_notes(version_code, tr_notes, en_notes)
+  {
+    "tr-TR" => tr_notes,
+    "en-US" => en_notes
+  }.each do |locale, notes|
+    UI.user_error!("#{locale}: Release notes are required!") if notes.empty?
+
+    UI.user_error!("#{locale}: Maximum 500 characters!") if notes.length > 500
+
+    directory = File.join(
+      METADATA_PATH, locale, "changelogs"
+    )
+
+    FileUtils.mkdir_p(directory)
+
+    File.write(
+      File.join(directory, "#{version_code}.txt"),
+      notes + "\n"
+    )
+  end
+end
+
+platform :android do
+
+  desc "Build Flutter Android App Bundle"
+  lane :build do
+    Dir.chdir(ROOT_DIR) do
+      sh("flutter pub get")
+      sh("flutter build appbundle --release")
+    end
+
+    UI.user_error!("AAB file not found!") unless File.file?(AAB_PATH)
+
+    UI.success("Android AAB build completed!")
+  end
+
+  desc "Upload current AAB as Production draft"
+  lane :deploy do
+    build
+
+    upload_to_play_store(
+      track: "production",
+      aab: AAB_PATH,
+      release_status: "draft",
+      skip_upload_metadata: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true
+    )
+  end
+
+  desc "Submit current version to Production"
+  private_lane :submit_production do
+    upload_to_play_store(
+      track: "production",
+      aab: AAB_PATH,
+      release_status: "completed",
+      metadata_path: METADATA_PATH,
+      skip_upload_metadata: true,
+      skip_upload_changelogs: false,
+      skip_upload_images: true,
+      skip_upload_screenshots: true,
+      changes_not_sent_for_review: false
+    )
+
+    UI.success("AlgoBot Production release submitted!")
+  end
+
+  desc "Interactive AlgoBot Production release"
+  lane :release do
+    UI.header("AlgoBot Release Automation")
+
+    choice = UI.select(
+      "Select release type:",
+      ["Patch", "Minor", "Major"]
+    )
+
+    release_type = {
+      "Patch" => "1",
+      "Minor" => "2",
+      "Major" => "3"
+    }.fetch(choice)
+
+    tr_notes = UI.input(
+      "Turkce surum aciklamasi (tr-TR):"
+    ).strip
+
+    en_notes = UI.input(
+      "English release notes (en-US):"
+    ).strip
+
+    algobot_save_notes_validation = {
+      "tr-TR" => tr_notes,
+      "en-US" => en_notes
+    }
+
+    algobot_save_notes_validation.each do |locale, notes|
+      UI.user_error!("#{locale}: Release notes required!") if notes.empty?
+      UI.user_error!("#{locale}: Maximum 500 characters!") if notes.length > 500
+    end
+
+    current_version = algobot_version
+
+    UI.header("Release Summary")
+    UI.message("Current version: #{current_version}")
+    UI.message("Release type: #{choice}")
+    UI.message("TR: #{tr_notes}")
+    UI.message("EN: #{en_notes}")
+
+    confirmed = UI.confirm(
+      "Build and submit to Google Play Production?"
+    )
+
+    unless confirmed
+      UI.message("Release cancelled.")
+      next
+    end
+
+    Dir.chdir(ROOT_DIR) do
+      sh("bash scripts/bump_version.sh #{release_type}")
+    end
+
+    new_version = algobot_version
+    version_code = new_version.split("+").last
+
+    algobot_save_notes(version_code, tr_notes, en_notes)
+
+    UI.success("Prepared version: #{new_version}")
+
+    build
+    submit_production
+  end
+
+  desc "Retry current version without increasing versionCode"
+  lane :retry_release do
+    version = algobot_version
+    version_code = version.split("+").last
+
+    ["tr-TR", "en-US"].each do |locale|
+      path = File.join(
+        METADATA_PATH, locale, "changelogs",
+        "#{version_code}.txt"
+      )
+
+      UI.user_error!("Missing release notes: #{path}") unless File.file?(path)
+    end
+
+    UI.header("Retry Production Release")
+    UI.message("Version: #{version}")
+
+    confirmed = UI.confirm(
+      "Rebuild and retry Google Play Production upload?"
+    )
+
+    unless confirmed
+      UI.message("Retry cancelled.")
+      next
+    end
+
+    build
+    submit_production
+  end
+
+end
+

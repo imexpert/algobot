@@ -63,7 +63,12 @@ class SoundService {
   Future<void> playNow(Sound sound) async {
     try {
       final player = _players.putIfAbsent(sound, () {
-        final p = AudioPlayer()..setReleaseMode(ReleaseMode.stop);
+        final p = AudioPlayer()
+          ..setReleaseMode(ReleaseMode.stop)
+          // Efektler için konum gerekmez. Android'de düşük gecikme modu
+          // "bitti" olayı göndermediği için varsayılan konum güncelleyici
+          // hiç durmuyor ve her karede çalışıyordu (pil tüketimi).
+          ..positionUpdater = null;
         p.setAudioContext(_audioContext);
         return p;
       });

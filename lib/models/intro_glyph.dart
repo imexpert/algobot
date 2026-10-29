@@ -12,4 +12,7 @@ enum IntroGlyph {
   then,
   plus,
   around,
+
+  /// Tekrarla kartı (Dünya 2).
+  repeat,
 }

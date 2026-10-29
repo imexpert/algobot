@@ -1,5 +1,6 @@
 import 'package:algobot/data/levels.dart';
 import 'package:algobot/engine/level_analysis.dart';
+import 'package:algobot/engine/loop_solver.dart';
 import 'package:algobot/engine/simulator.dart';
 import 'package:algobot/engine/solver.dart';
 import 'package:algobot/engine/star_calculator.dart';
@@ -7,6 +8,7 @@ import 'package:algobot/models/age_config.dart';
 import 'package:algobot/models/age_group.dart';
 import 'package:algobot/models/cell.dart';
 import 'package:algobot/models/level.dart';
+import 'package:algobot/models/program.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 int _count(List<String> map, String chars) =>
@@ -30,12 +32,76 @@ void main() {
     final levels = entry.value;
 
     group(age.name, () {
-      test('8 seviye, kimlikler 1..8, yaş grubu doğru', () {
-        expect(levels.map((l) => l.id), List.generate(8, (i) => i + 1));
+      test('16 seviye: Dünya 1 (1–8) ve Dünya 2 (9–16), numaralar 1–8', () {
+        expect(levels.map((l) => l.id), List.generate(16, (i) => i + 1));
         expect(levels.every((l) => l.ageGroup == age), isTrue);
+        expect(levels.take(8).every((l) => l.world == 1), isTrue);
+        expect(levels.skip(8).every((l) => l.world == 2), isTrue);
+        for (final w in [1, 2]) {
+          expect(
+            levels.where((l) => l.world == w).map((l) => l.number),
+            List.generate(8, (i) => i + 1),
+          );
+        }
       });
 
-      for (final level in levels) {
+      for (final level in levels.where((l) => l.world == 2)) {
+        group('Dünya 2 · Seviye ${level.number} (${level.textKey})', () {
+          test('Harita geçerli', () {
+            expect(
+              level.map.every((r) => r.length == level.map.first.length),
+              isTrue,
+            );
+            expect(_count(level.map, 'R'), 1);
+            expect(_count(level.map, 'G'), 1);
+            expect(
+              level.map.join().split('').every('RGBb.#KDIPp'.contains),
+              isTrue,
+            );
+          });
+
+          test('Referans program geçerli, 3 yıldız, uzunluğu optimal', () {
+            final program = level.solutionProgram;
+            expect(isValidProgram(program), isTrue);
+            final result = Simulator.runProgram(level, program);
+            expect(result.isSuccess, isTrue);
+            expect(StarCalculator.stars(level, result), 3);
+            expect(program.length, level.optimalLength);
+            expect(program.length, lessThanOrEqualTo(level.maxSlots));
+          });
+
+          test('Yaşın döngü biçimi ve paletteki komutlar', () {
+            final program = level.solutionProgram;
+            final moves = program.whereType<Move>();
+            expect(
+              moves.every((m) => level.paletteCommands.contains(m.command)),
+              isTrue,
+            );
+            switch (age.settings.loopStyle) {
+              case LoopStyle.multiplier:
+                expect(program.whereType<LoopStart>(), isEmpty);
+                expect(moves.any((m) => m.times > 1), isTrue);
+              case LoopStyle.block:
+                expect(moves.every((m) => m.times == 1), isTrue);
+                expect(program.whereType<LoopStart>(), isNotEmpty);
+            }
+          });
+
+          test('Döngülü çözücü: en az kart = optimalLength', () {
+            final best = LoopSolver.solve(level);
+            expect(best, isNotNull);
+            expect(best!.length, level.optimalLength);
+          });
+
+          test('Döngü zorunlu: döngüsüz en kısa çözüm şeride sığmaz', () {
+            final plain = Solver.solve(level);
+            expect(plain, isNotNull);
+            expect(plain!.length, greaterThan(level.maxSlots));
+          });
+        });
+      }
+
+      for (final level in levels.where((l) => l.world == 1)) {
         group('Seviye ${level.id} (${level.textKey})', () {
           test('Harita geçerli: eşit satırlar, tek R, tek G', () {
             expect(
@@ -131,7 +197,7 @@ void main() {
   }
 
   group('13+ tanıtım seviyelerinde mekanik zorunlu', () {
-    final plus = levelsFor(AgeGroup.ages13plus);
+    final plus = levelsFor(AgeGroup.ages13plus).where((l) => l.world == 1);
     final cases = {3: CellType.door, 5: CellType.ice, 7: CellType.portalA};
     cases.forEach((id, mechanic) {
       test('Seviye $id: ${mechanic.name} olmadan çözüm yok', () {
@@ -145,7 +211,7 @@ void main() {
     });
 
     test('Final: üç mekanik de var ve her biri zorunlu', () {
-      final level = plus.last;
+      final level = plus.firstWhere((l) => l.id == 8);
       for (final m in [CellType.door, CellType.ice, CellType.portalA]) {
         expect(level.hasCell(m), isTrue);
         expect(Solver.solve(withoutMechanic(level, m)), isNull);

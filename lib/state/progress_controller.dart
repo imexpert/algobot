@@ -44,6 +44,10 @@ class ProgressController extends ChangeNotifier {
   int get totalStarsAll =>
       _progress.values.fold(0, (sum, p) => sum + p.bestStars);
 
+  /// Tüm yaş setlerinde üç yıldızla çözülmüş seviye sayısı.
+  int get threeStarCount =>
+      _progress.values.where((p) => p.bestStars >= 3).length;
+
   /// İlk seviye açıktır; önceki seviye çözülmüş ya da atlanmışsa açıktır.
   bool isUnlocked(Level level) {
     final list = levelsFor(level.ageGroup);
@@ -97,8 +101,17 @@ class ProgressController extends ChangeNotifier {
     if (progressFor(level) == progress) return;
     _progress[(level.ageGroup, level.id)] = progress;
     notifyListeners();
-    _repository.save(level.ageGroup, level.id, progress).catchError((Object e) {
+    _save(level, progress);
+  }
+
+  /// Veritabanı hatası oyunu çökertmez; bellekteki durumla devam edilir.
+  /// (`catchError` kullanılmaz: sqflite `Future<int>` döndürdüğü için
+  /// boş işleyici ikinci, yakalanmamış bir hata üretiyordu.)
+  Future<void> _save(Level level, LevelProgress progress) async {
+    try {
+      await _repository.save(level.ageGroup, level.id, progress);
+    } catch (e) {
       debugPrint('İlerleme kaydedilemedi: $e');
-    });
+    }
   }
 }

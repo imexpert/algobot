@@ -10,6 +10,7 @@ import '../../jokers/joker_type.dart';
 import '../../l10n/l10n.dart';
 import '../../models/age_group.dart';
 import '../../models/level.dart';
+import '../../review/review_service.dart';
 import '../../rewards/rewarded_video_service.dart';
 import '../../state/game_controller.dart';
 import '../../state/progress_controller.dart';
@@ -24,7 +25,9 @@ import '../widgets/lives_indicator.dart';
 import '../widgets/new_friend_dialog.dart';
 import '../widgets/out_of_lives_sheet.dart';
 import '../widgets/program_strip.dart';
+import '../widgets/parent_gate_dialog.dart';
 import '../widgets/result_sheet.dart';
+import '../widgets/review_prompt_dialog.dart';
 import 'home_screen.dart';
 
 class GameScreen extends StatefulWidget {
@@ -45,6 +48,9 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
 
   /// Bu seviye oturumu başladığında toplam yıldız (yeni karakter tespiti).
   late int _starsBefore;
+
+  /// Bu oturum başladığında üç yıldızlı seviye sayısı (değerlendirme sorusu).
+  late int _threeStarsBefore;
 
   @override
   void initState() {
@@ -69,6 +75,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       WidgetsBinding.instance.addPostFrameCallback((_) => _showOutOfLives());
     }
     _starsBefore = progress.totalStarsAll;
+    _threeStarsBefore = progress.threeStarCount;
   }
 
   @override
@@ -105,6 +112,8 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       }
     }
     if (!mounted) return;
+    if (!switched) await _maybeAskForReview();
+    if (!mounted) return;
     if (switched && action != ResultAction.next) {
       // Yeni arkadaşla aynı seviyeyi tekrar dene.
       Navigator.pushReplacement(
@@ -120,6 +129,32 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       return;
     }
     _goToNextLevel();
+  }
+
+  /// Kilometre taşında (dünya bitti ya da 5/15/30. üç yıldız) ve
+  /// [ReviewService] kuralları uygunsa ebeveyne değerlendirme sorulur.
+  /// Yalnızca gerçek başarıdan sonra çağrılır (atlama ya da video değil).
+  Future<void> _maybeAskForReview() async {
+    final progress = context.read<ProgressController>();
+    final review = context.read<ReviewService>();
+    final threeStars = progress.threeStarCount;
+    final milestone =
+        _isWorldFinal(widget.level) ||
+        ReviewService.crossedStarMilestone(_threeStarsBefore, threeStars);
+    _threeStarsBefore = threeStars;
+    if (!review.shouldPrompt(milestone: milestone)) return;
+    await review.markPrompted();
+    if (!mounted) return;
+    if (!await ReviewPromptDialog.show(context, _game.character)) return;
+    if (!mounted) return;
+    if (!await ParentGateDialog.verify(context)) return;
+    await review.requestReview();
+  }
+
+  /// Dünyanın son seviyesi mi (aynı dünyada sonraki seviye yok).
+  bool _isWorldFinal(Level level) {
+    final next = context.read<ProgressController>().levelAfter(level);
+    return next == null || next.world != level.world;
   }
 
   /// Sonraki seviyeye geçer; son seviyedeyse seviye seçimine döner.
@@ -218,7 +253,9 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 600),
+            constraints: BoxConstraints(
+              maxWidth: _isWide(MediaQuery.sizeOf(context)) ? 1200 : 600,
+            ),
             child: ListenableBuilder(
               listenable: Listenable.merge([
                 _game,
@@ -248,6 +285,11 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       ),
     );
   }
+
+  /// Geniş yatay ekran (tablet, katlanabilir): tahta solda, kontroller
+  /// sağda. Android 16'da büyük ekranlarda dikey kilit yok sayılır.
+  static bool _isWide(Size size) =>
+      size.width >= 900 && size.width > size.height * 1.2;
 
   /// Tahtanın okunabilir kalması için en küçük yüksekliği (kare ≥ 28dp).
   double get _minBoardHeight {
@@ -370,12 +412,37 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
           tutorialKey: _paletteKey,
           // Eğitim parmağı çözümün ilk kartını (8–12 Seviye 1: İleri)
           // işaret eder; konum komut türüne göre bulunur.
-          tutorialCommand: game.level.referenceSolution.first,
+          tutorialCommand: game.tutorialCommand,
+          tutorialRepeat: game.tutorialPointsToRepeat,
         ),
         const SizedBox(height: 12),
         _Controls(game: game, runKey: _runKey),
       ],
     ];
+
+    if (_isWide(MediaQuery.sizeOf(context))) {
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Expanded(child: board),
+            const SizedBox(width: 16),
+            SizedBox(
+              width: 460,
+              child: Center(
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: controls,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -432,7 +499,7 @@ class _TopBar extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  l.levelHeader(level.id),
+                  l.levelHeader(level.world, level.number),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
@@ -489,12 +556,19 @@ class _StatusLine extends StatelessWidget {
         GameMessage.lastLife || GameMessage.videoFailed => AppColors.warning,
         _ => AppColors.activeHighlight,
       };
-    } else if (index != null && index < game.program.length) {
-      text = l.stepInfo(
-        index + 1,
-        game.program.length,
-        l.commandLong(game.program[index].command),
-      );
+    } else if (index != null && game.currentStep != null) {
+      final step = game.currentStep!;
+      final command = l.commandLong(step.command);
+      // Döngü ya da çarpanlı kartta tur bilgisi de gösterilir.
+      text = step.iterations > 1
+          ? l.stepInfoRound(
+              game.currentStepNumber,
+              game.totalSteps,
+              command,
+              step.iteration,
+              step.iterations,
+            )
+          : l.stepInfo(game.currentStepNumber, game.totalSteps, command);
     }
     return Container(
       constraints: const BoxConstraints(minHeight: 28),

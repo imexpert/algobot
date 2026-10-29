@@ -18,19 +18,37 @@ import '../models/age_group.dart';
 import '../models/command.dart';
 import '../models/direction.dart';
 import '../models/level.dart';
+import '../models/program.dart';
 import 'progress_controller.dart';
 
 enum GamePhase { editing, running, crashed, stoppedShort, success }
 
 /// Arayüzün yerelleştirerek gösterdiği kısa mesajlar.
-enum GameMessage { emptyProgram, stripFull, lastLife, videoFailed }
+enum GameMessage {
+  emptyProgram,
+  stripFull,
+  lastLife,
+  videoFailed,
+
+  /// 5–7: Tekrarla için önce bir ok kartı gerekir.
+  noCardToRepeat,
+
+  /// 5–7: bir kart en fazla ×5.
+  maxRepeat,
+}
 
 /// Şeritteki bir kart. `id` animasyonlar ve sürükleme için kararlı anahtardır.
 @immutable
 class ProgramCard {
-  const ProgramCard(this.id, this.command);
+  const ProgramCard(this.id, this.instruction);
   final int id;
-  final Command command;
+  final Instruction instruction;
+
+  /// Komut kartıysa komutu (döngü kartlarında null).
+  Command? get command => switch (instruction) {
+    Move(:final command) => command,
+    _ => null,
+  };
 }
 
 enum _SegKind { turn, walk, slide, teleport, bump }
@@ -104,7 +122,10 @@ class GameController extends ChangeNotifier {
   // --- Oynatma durumu ---
   GamePhase _phase = GamePhase.editing;
   GamePhase get phase => _phase;
-  bool get isLocked => _phase != GamePhase.editing;
+
+  /// Çalışırken, sonuç gösterilirken ve atlama animasyonu sürerken şerit,
+  /// palet ve Çalıştır kilitlidir.
+  bool get isLocked => _phase != GamePhase.editing || _skipping;
   bool get isRunning => _phase == GamePhase.running;
 
   bool _fast = false;
@@ -295,15 +316,61 @@ class GameController extends ChangeNotifier {
 
   bool _tutorialDone = false;
 
-  /// Parmak eğitimi: 5–7'de Seviye 1–2, 8–12'de Seviye 1.
+  /// Parmak eğitimi: 5–7'de Seviye 1–2, 8–12'de Seviye 1; Dünya 2'nin
+  /// ilk seviyesinde her yaşta (Tekrarla kartı).
   bool get showTutorial =>
       !_tutorialDone &&
       _phase == GamePhase.editing &&
-      switch (level.ageGroup) {
-        AgeGroup.ages5to7 => level.id <= 2,
-        AgeGroup.ages8to12 => level.id == 1,
-        AgeGroup.ages13plus => false,
-      };
+      (level.world == 2
+          ? level.number == 1
+          : switch (level.ageGroup) {
+              AgeGroup.ages5to7 => level.number <= 2,
+              AgeGroup.ages8to12 => level.number == 1,
+              AgeGroup.ages13plus => false,
+            });
+
+  /// Eğitim parmağının işaret ettiği palet kartı: Dünya 2'nin ilk
+  /// seviyesinde Tekrarla, diğerlerinde çözümün ilk komutu.
+  bool get tutorialPointsToRepeat => level.world == 2 && level.number == 1;
+  Command? get tutorialCommand => switch (level.solutionProgram.first) {
+    Move(:final command) => command,
+    _ => level.paletteCommands.first,
+  };
+
+  // --- Döngüler ---
+  /// Açık (içine kart eklenen) döngünün başlangıç kartı.
+  int? _openLoopId;
+
+  /// Açık döngünün başlangıç kartı (yoksa null).
+  int? get openLoopId => _openLoopId;
+
+  LoopStyle get loopStyle => ageSettings.loopStyle;
+
+  List<Instruction> get _instructions =>
+      _program.map((c) => c.instruction).toList();
+
+  /// Bir döngü başı kartının eşleşen sonunun sırası.
+  int _loopEndIndex(int startIndex) {
+    for (var i = startIndex + 1; i < _program.length; i++) {
+      if (_program[i].instruction is LoopEnd) return i;
+    }
+    return _program.length;
+  }
+
+  /// Yeni kartın gireceği yer: açık döngü varsa onun sonundan önce.
+  int get _cursor {
+    final open = _program.indexWhere((c) => c.id == _openLoopId);
+    if (open < 0) return _program.length;
+    return _loopEndIndex(open);
+  }
+
+  // --- Çalışırken gösterilen adım bilgisi ---
+  RunStep? _currentStep;
+  int _currentStepNumber = 0;
+  int _totalSteps = 0;
+  RunStep? get currentStep => _currentStep;
+  int get currentStepNumber => _currentStepNumber;
+  int get totalSteps => _totalSteps;
 
   // --- Geçici mesaj ve şerit uyarısı ---
   GameMessage? _message;
@@ -324,8 +391,8 @@ class GameController extends ChangeNotifier {
       _warnFull();
       return false;
     }
-    final index = (at ?? _program.length).clamp(0, _program.length);
-    _program.insert(index, ProgramCard(_nextCardId++, command));
+    final index = (at ?? _cursor).clamp(0, _program.length);
+    _program.insert(index, ProgramCard(_nextCardId++, Move(command)));
     _tutorialDone = true;
     _programChanged();
     _sound.play(Sound.cardAdd);
@@ -334,20 +401,22 @@ class GameController extends ChangeNotifier {
     return true;
   }
 
+  /// Komut kartını siler. Döngü kartları [removeLoop] ile silinir.
   void removeCard(int id) {
     if (isLocked) return;
     final before = _program.length;
-    _program.removeWhere((c) => c.id == id);
+    _program.removeWhere((c) => c.id == id && c.instruction is Move);
     if (_program.length == before) return;
     _programChanged();
     _sound.play(Sound.cardRemove);
     _notify();
   }
 
+  /// Yalnızca komut kartları taşınır; böylece döngüler hep dengeli kalır.
   void moveCard(int id, int toIndex) {
     if (isLocked) return;
     final from = _program.indexWhere((c) => c.id == id);
-    if (from < 0) return;
+    if (from < 0 || _program[from].instruction is! Move) return;
     final card = _program.removeAt(from);
     final target = (toIndex > from ? toIndex - 1 : toIndex).clamp(
       0,
@@ -364,8 +433,112 @@ class GameController extends ChangeNotifier {
   void clear() {
     if (isLocked || _program.isEmpty) return;
     _program.clear();
+    _openLoopId = null;
     _programChanged();
     _sound.play(Sound.cardRemove);
+    _notify();
+  }
+
+  /// Tekrarla kartı. 5–7: [at] sıradaki kartın (yoksa son ok kartının)
+  /// çarpanını bir artırır. 8–12/13+: `↻×2 [` ve `]` ekler ve döngüyü
+  /// açar; sonraki kartlar içine girer. Döngüler iç içe olamaz: döngünün
+  /// içine bırakılırsa o döngünün hemen arkasına eklenir.
+  bool addRepeat({int? at}) {
+    if (isLocked || !level.allowsLoops) return false;
+    switch (loopStyle) {
+      case LoopStyle.multiplier:
+        var target = -1;
+        if (at != null && at < _program.length) {
+          target = at;
+        } else {
+          target = _program.lastIndexWhere((c) => c.instruction is Move);
+        }
+        if (target < 0 || _program[target].instruction is! Move) {
+          _showMessage(GameMessage.noCardToRepeat);
+          return false;
+        }
+        final move = _program[target].instruction as Move;
+        if (move.times >= Move.maxTimes) {
+          _showMessage(GameMessage.maxRepeat);
+          return false;
+        }
+        _program[target] = ProgramCard(
+          _program[target].id,
+          move.withTimes(move.times + 1),
+        );
+      case LoopStyle.block:
+        if (_program.length + 2 > level.maxSlots) {
+          _warnFull();
+          return false;
+        }
+        var index = (at ?? _program.length).clamp(0, _program.length);
+        if (at == null && _openLoopId != null) {
+          // Açık döngünün içindeyken yeni döngü: önce onu kapat.
+          index = _cursor + 1;
+        }
+        if (isInsideLoop(_instructions, index)) {
+          index =
+              _loopEndIndex(
+                _program.lastIndexWhere(
+                  (c) => c.instruction is LoopStart,
+                  index - 1,
+                ),
+              ) +
+              1;
+        }
+        final start = ProgramCard(_nextCardId++, const LoopStart(2));
+        _program.insertAll(index, [
+          start,
+          ProgramCard(_nextCardId++, const LoopEnd()),
+        ]);
+        _openLoopId = start.id;
+    }
+    _tutorialDone = true;
+    _programChanged();
+    _sound.play(Sound.cardAdd);
+    HapticFeedback.selectionClick();
+    _notify();
+    return true;
+  }
+
+  /// Döngünün tur sayısını değiştirir (2–5).
+  void setLoopCount(int startId, int count) {
+    if (isLocked) return;
+    final i = _program.indexWhere((c) => c.id == startId);
+    if (i < 0 || _program[i].instruction is! LoopStart) return;
+    _program[i] = ProgramCard(startId, LoopStart(count));
+    _programChanged();
+    _sound.play(Sound.tap);
+    _notify();
+  }
+
+  /// Döngüyü kaldırır; içindeki kartlar şeritte kalır.
+  void removeLoop(int startId) {
+    if (isLocked) return;
+    final i = _program.indexWhere((c) => c.id == startId);
+    if (i < 0 || _program[i].instruction is! LoopStart) return;
+    final end = _loopEndIndex(i);
+    if (end < _program.length) _program.removeAt(end);
+    _program.removeAt(i);
+    if (_openLoopId == startId) _openLoopId = null;
+    _programChanged();
+    _sound.play(Sound.cardRemove);
+    _notify();
+  }
+
+  /// Döngü sonu kartı: açık döngüyü kapatır, kapalıysa yeniden açar.
+  void toggleLoopOpen(int endId) {
+    if (isLocked) return;
+    final end = _program.indexWhere((c) => c.id == endId);
+    if (end < 0) return;
+    final start = _program.lastIndexWhere(
+      (c) => c.instruction is LoopStart,
+      end,
+    );
+    if (start < 0) return;
+    final id = _program[start].id;
+    _openLoopId = _openLoopId == id ? null : id;
+    _sound.play(Sound.tap);
     _notify();
   }
 
@@ -414,6 +587,7 @@ class GameController extends ChangeNotifier {
     _phase = GamePhase.editing;
     _introVisible = false;
     _currentIndex = null;
+    _currentStep = null;
 
     // Işınlanma: mevcut konumdan hedefe.
     _segs = [_Seg(_SegKind.teleport, 0, 600, _pos, level.goal)];
@@ -458,6 +632,11 @@ class GameController extends ChangeNotifier {
 
   Future<void> run() async {
     if (isLocked) return;
+    // Can kalmadıysa çalıştırılmaz; panel hemen açılır.
+    if (outOfLives) {
+      onOutOfLives?.call();
+      return;
+    }
     if (!_begin()) return;
     final token = _token;
     final steps = _result!.steps;
@@ -481,13 +660,18 @@ class GameController extends ChangeNotifier {
   }
 
   bool _begin() {
-    if (_program.isEmpty) {
+    // Boş şerit ya da yalnızca boş döngü: oynatılacak adım yok.
+    if (expandProgram(_instructions).isEmpty) {
       _showMessage(GameMessage.emptyProgram);
       return false;
     }
     _cancelPlayback();
     _resetPose();
-    _result = Simulator.run(level, _program.map((c) => c.command).toList());
+    _openLoopId = null;
+    _result = Simulator.runProgram(level, _instructions);
+    _totalSteps = expandProgram(_instructions).length;
+    _currentStep = null;
+    _currentStepNumber = 0;
     _phase = GamePhase.running;
     _introVisible = false;
     _clearMessage();
@@ -554,6 +738,8 @@ class GameController extends ChangeNotifier {
 
   Future<bool> _play(RunStep step, int token) async {
     _currentIndex = step.index;
+    _currentStep = step;
+    _currentStepNumber++;
     _buildSegments(step);
     _anim.value = 0;
     _animStep = step;
@@ -668,7 +854,7 @@ class GameController extends ChangeNotifier {
     if (_saveTimer == null) return;
     _saveTimer?.cancel();
     _saveTimer = null;
-    _sessions.saveProgram(level, _program.map((c) => c.command).toList());
+    _sessions.saveProgram(level, _instructions);
   }
 
   void _setRest(CharacterState state) {
@@ -687,6 +873,7 @@ class GameController extends ChangeNotifier {
   void _toEditing() {
     _phase = GamePhase.editing;
     _currentIndex = null;
+    _currentStep = null;
     _resetPose();
     _notify();
   }

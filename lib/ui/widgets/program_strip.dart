@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 
 import '../../core/colors.dart';
 import '../../l10n/l10n.dart';
+import '../../models/command.dart';
+import '../../models/program.dart';
 import '../../state/game_controller.dart';
 import 'command_card.dart';
 
@@ -126,12 +128,20 @@ class _ProgramStripState extends State<ProgramStrip> {
     final game = widget.game;
     final program = game.program;
     final card = i < program.length ? program[i] : null;
+    final instructions = [for (final c in program) c.instruction];
+    // Döngü gövdesindeki yuvalar pembe bir şeritle işaretlenir.
+    final inLoopBody =
+        card != null &&
+        card.instruction is Move &&
+        isInsideLoop(instructions, i);
     return DragTarget<CardDrag>(
       onWillAcceptWithDetails: (_) => !game.isLocked,
       onAcceptWithDetails: (details) {
         switch (details.data) {
           case PaletteDrag(:final command):
             game.addCommand(command, at: i);
+          case RepeatDrag():
+            game.addRepeat(at: i);
           case StripDrag(:final cardId):
             game.moveCard(cardId, i);
         }
@@ -139,17 +149,7 @@ class _ProgramStripState extends State<ProgramStrip> {
       builder: (context, candidates, _) {
         final hovering = candidates.isNotEmpty;
         Widget child;
-        if (card != null) {
-          child = _StripCard(
-            key: ValueKey(card.id),
-            card: card,
-            size: size,
-            highlighted: game.currentIndex == i,
-            locked: game.isLocked,
-            animateIn: animateIn.contains(card.id),
-            onRemove: () => game.removeCard(card.id),
-          );
-        } else {
+        if (card == null) {
           child = Semantics(
             label: context.l10n.emptySlotLabel(i + 1),
             child: CustomPaint(
@@ -161,6 +161,22 @@ class _ProgramStripState extends State<ProgramStrip> {
               ),
             ),
           );
+        } else {
+          child = switch (card.instruction) {
+            Move(:final command, :final times) => _StripCard(
+              key: ValueKey(card.id),
+              card: card,
+              command: command,
+              times: times,
+              size: size,
+              highlighted: game.currentIndex == i,
+              locked: game.isLocked,
+              animateIn: animateIn.contains(card.id),
+              onRemove: () => game.removeCard(card.id),
+            ),
+            LoopStart(:final count) => _loopStart(card, i, count, size),
+            LoopEnd() => _loopEnd(card, size),
+          };
         }
         if (hovering && card != null) {
           // Bırakılacak konumu belirtmek için sol kenar çizgisi.
@@ -177,9 +193,166 @@ class _ProgramStripState extends State<ProgramStrip> {
             ],
           );
         }
+        if (inLoopBody) {
+          child = Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Positioned(
+                left: -ProgramStrip.gap,
+                right: -ProgramStrip.gap,
+                bottom: -5,
+                height: 4,
+                child: const ColoredBox(color: AppColors.loopCard),
+              ),
+              child,
+            ],
+          );
+        }
         return SizedBox.square(dimension: size, child: child);
       },
     );
+  }
+
+  Widget _loopStart(ProgramCard card, int index, int count, double size) {
+    final game = widget.game;
+    final l = context.l10n;
+    final step = game.currentStep;
+    final running = step != null && step.loopToken == index;
+    return Semantics(
+      button: true,
+      label: l.loopCardLabel(count),
+      excludeSemantics: true,
+      onTap: game.isLocked ? null : () => _loopMenu(card, count),
+      child: GestureDetector(
+        onTap: game.isLocked ? null : () => _loopMenu(card, count),
+        child: LoopCard(
+          icon: Icons.repeat,
+          label: '×$count',
+          size: size,
+          highlighted: running,
+          badge: running ? '${step.iteration}/${step.iterations}' : null,
+        ),
+      ),
+    );
+  }
+
+  Widget _loopEnd(ProgramCard card, double size) {
+    final game = widget.game;
+    final l = context.l10n;
+    final program = game.program;
+    final end = program.indexOf(card);
+    final start = program.lastIndexWhere(
+      (c) => c.instruction is LoopStart,
+      end,
+    );
+    final open = start >= 0 && program[start].id == game.openLoopId;
+    return Semantics(
+      button: true,
+      label: open ? l.loopEndOpenLabel : l.loopEndCardLabel,
+      excludeSemantics: true,
+      onTap: game.isLocked ? null : () => game.toggleLoopOpen(card.id),
+      child: GestureDetector(
+        onTap: game.isLocked ? null : () => game.toggleLoopOpen(card.id),
+        child: LoopCard(
+          icon: open ? Icons.check : Icons.subdirectory_arrow_left,
+          label: l.loopEndShort,
+          size: size,
+          glowing: open,
+        ),
+      ),
+    );
+  }
+
+  /// Döngü başı kartı: tur sayısı (2–5) ya da döngüyü kaldır.
+  Future<void> _loopMenu(ProgramCard card, int count) async {
+    final game = widget.game;
+    final l = context.l10n;
+    final choice = await showModalBottomSheet<int>(
+      context: context,
+      backgroundColor: AppColors.panel,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                l.loopCountTitle,
+                style: const TextStyle(
+                  color: AppColors.textPrimary,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  for (var n = LoopStart.minCount; n <= LoopStart.maxCount; n++)
+                    Semantics(
+                      button: true,
+                      selected: n == count,
+                      label: l.loopCardLabel(n),
+                      excludeSemantics: true,
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(16),
+                        onTap: () => Navigator.pop(context, n),
+                        child: Container(
+                          width: 56,
+                          height: 56,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: n == count
+                                ? AppColors.loopCard
+                                : AppColors.background,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: AppColors.loopCard,
+                              width: 2,
+                            ),
+                          ),
+                          child: Text(
+                            '×$n',
+                            style: const TextStyle(
+                              color: AppColors.textPrimary,
+                              fontSize: 20,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              TextButton.icon(
+                onPressed: () => Navigator.pop(context, 0),
+                icon: const Icon(
+                  Icons.delete_outline,
+                  color: AppColors.warning,
+                ),
+                label: Text(
+                  l.removeLoop,
+                  style: const TextStyle(
+                    color: AppColors.warning,
+                    fontSize: 16,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    if (choice == null || !mounted) return;
+    if (choice == 0) {
+      game.removeLoop(card.id);
+    } else {
+      game.setLoopCount(card.id, choice);
+    }
   }
 }
 
@@ -187,6 +360,8 @@ class _StripCard extends StatefulWidget {
   const _StripCard({
     super.key,
     required this.card,
+    required this.command,
+    required this.times,
     required this.size,
     required this.highlighted,
     required this.locked,
@@ -195,6 +370,8 @@ class _StripCard extends StatefulWidget {
   });
 
   final ProgramCard card;
+  final Command command;
+  final int times;
   final double size;
   final bool highlighted;
   final bool locked;
@@ -235,7 +412,8 @@ class _StripCardState extends State<_StripCard> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    final command = widget.card.command;
+    final command = widget.command;
+    final l = context.l10n;
     final card = AnimatedScale(
       scale: widget.highlighted ? 1.08 : 1,
       duration: const Duration(milliseconds: 150),
@@ -243,11 +421,14 @@ class _StripCardState extends State<_StripCard> with TickerProviderStateMixin {
         command: command,
         size: widget.size,
         highlighted: widget.highlighted,
+        times: widget.times,
       ),
     );
     return Semantics(
       button: true,
-      label: context.l10n.stripCardLabel(context.l10n.commandLong(command)),
+      label: widget.times > 1
+          ? l.multiplierCardLabel(l.commandLong(command), widget.times)
+          : l.stripCardLabel(l.commandLong(command)),
       excludeSemantics: true,
       onTap: widget.locked ? null : _remove,
       child: ScaleTransition(
