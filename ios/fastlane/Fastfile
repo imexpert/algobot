@@ -2,13 +2,13 @@
 require "fileutils"
 require "shellwords"
 require "open3"
+require "spaceship"
 
 default_platform(:ios)
 
 ROOT_DIR = File.expand_path("../..", __dir__)
 NOTES_ROOT = File.join(ROOT_DIR, "release-notes")
 IPA_PATH = File.join(ROOT_DIR, "build/ios/ipa/AlgoBot.ipa")
-
 APP_IDENTIFIER = "com.fabsora.algobot"
 LOCALES = ["tr-TR", "en-US"].freeze
 
@@ -86,6 +86,45 @@ def algobot_api_key
   )
 end
 
+# Check whether the exact iOS version and build already exist.
+# Fail closed if the App Store Connect API query fails.
+
+def algobot_check_store_version(data)
+  UI.header("Checking App Store Connect build version")
+  UI.message("Bundle ID: #{APP_IDENTIFIER}")
+  UI.message("Version: #{data[:marketing_version]}")
+  UI.message("Build: #{data[:build_number]}")
+
+  begin
+    app = Spaceship::ConnectAPI::App.find(APP_IDENTIFIER)
+
+    UI.user_error!(
+      "App not found on App Store Connect: #{APP_IDENTIFIER}"
+    ) unless app
+
+    builds = Spaceship::ConnectAPI::Build.all(
+      app_id: app.id,
+      version: data[:marketing_version],
+      build_number: data[:build_number],
+      platform: "IOS"
+    )
+  rescue => error
+    UI.user_error!(
+      "App Store Connect API query failed. Upload blocked! #{error.message}"
+    )
+  end
+
+  if builds.any?
+    UI.user_error!(
+      "Build #{data[:full_version]} already exists on App Store Connect. Upload blocked!"
+    )
+  end
+
+  UI.success(
+    "Build #{data[:full_version]} not found on App Store Connect."
+  )
+end
+
 def algobot_prepare_metadata(data)
   metadata_dir = File.join(ROOT_DIR, "build", "fastlane", "ios-metadata")
 
@@ -93,7 +132,11 @@ def algobot_prepare_metadata(data)
   FileUtils.mkdir_p(metadata_dir)
 
   LOCALES.each do |locale|
-    locale_dir = File.join(metadata_dir, locale == "tr-TR" ? "tr" : locale)
+    locale_dir = File.join(
+      metadata_dir,
+      locale == "tr-TR" ? "tr" : locale
+    )
+
     FileUtils.mkdir_p(locale_dir)
 
     File.write(
@@ -110,32 +153,59 @@ def algobot_prepare_metadata(data)
   metadata_dir
 end
 
-# Verify the actual IPA metadata before building or uploading.
+# Verify version, build number and bundle identifier
+# from the actual IPA file before uploading.
+
 def algobot_verify_ipa
   UI.user_error!("IPA file not found: #{IPA_PATH}") unless File.file?(IPA_PATH)
 
-  entries, list_error, list_status = Open3.capture3("unzip", "-Z1", IPA_PATH)
-  UI.user_error!("Unable to inspect IPA: #{list_error}") unless list_status.success?
+  entries, list_error, list_status = Open3.capture3(
+    "unzip", "-Z1", IPA_PATH
+  )
+
+  UI.user_error!(
+    "Unable to inspect IPA: #{list_error}"
+  ) unless list_status.success?
 
   plist_path = entries.lines.map(&:strip).find do |entry|
     entry.match?(%r{\APayload/[^/]+\.app/Info\.plist\z})
   end
+
   UI.user_error!("Main app Info.plist not found in IPA") unless plist_path
 
-  plist, unzip_error, unzip_status = Open3.capture3("unzip", "-p", IPA_PATH, plist_path)
-  UI.user_error!("Unable to read IPA Info.plist: #{unzip_error}") unless unzip_status.success?
+  plist, unzip_error, unzip_status = Open3.capture3(
+    "unzip", "-p", IPA_PATH, plist_path
+  )
+
+  UI.user_error!(
+    "Unable to read IPA Info.plist: #{unzip_error}"
+  ) unless unzip_status.success?
 
   values = {}
-  ["CFBundleShortVersionString", "CFBundleVersion", "CFBundleIdentifier"].each do |key|
+
+  [
+    "CFBundleShortVersionString",
+    "CFBundleVersion",
+    "CFBundleIdentifier"
+  ].each do |key|
     value, error, status = Open3.capture3(
-      "plutil", "-extract", key, "raw", "-o", "-", "-",
+      "plutil",
+      "-extract", key,
+      "raw",
+      "-o", "-",
+      "-",
       stdin_data: plist
     )
-    UI.user_error!("Unable to read #{key} from IPA: #{error}") unless status.success?
+
+    UI.user_error!(
+      "Unable to read #{key} from IPA: #{error}"
+    ) unless status.success?
+
     values[key] = value.strip
   end
 
   expected_name, expected_build = algobot_version.split("+")
+
   expected = {
     "CFBundleShortVersionString" => expected_name,
     "CFBundleVersion" => expected_build,
@@ -144,13 +214,19 @@ def algobot_verify_ipa
 
   expected.each do |key, wanted|
     actual = values.fetch(key)
-    UI.user_error!("IPA #{key} mismatch: expected #{wanted}, got #{actual}") unless actual == wanted
+
+    UI.user_error!(
+      "IPA #{key} mismatch: expected #{wanted}, got #{actual}"
+    ) unless actual == wanted
   end
 
-  UI.success("iOS IPA version verified: #{expected_name}+#{expected_build}")
+  UI.success(
+    "iOS IPA version verified: #{expected_name}+#{expected_build}"
+  )
 end
 
 platform :ios do
+
   desc "Validate local Apple API key configuration"
   lane :check_auth do
     algobot_api_key
@@ -166,11 +242,24 @@ platform :ios do
     UI.message("Build: #{data[:build_number]}")
 
     LOCALES.each do |locale|
-      UI.message("#{locale} What's New: #{data[:notes][locale]}")
-      UI.message("#{locale} Promotional Text: #{data[:promotional][locale]}")
+      UI.message(
+        "#{locale} What's New: #{data[:notes][locale]}"
+      )
+
+      UI.message(
+        "#{locale} Promotional Text: #{data[:promotional][locale]}"
+      )
     end
 
     UI.success("Release metadata validated!")
+  end
+
+  desc "Check whether current build already exists on App Store Connect"
+  lane :check_store_version do
+    data = algobot_release_data
+
+    algobot_api_key
+    algobot_check_store_version(data)
   end
 
   desc "Build Flutter IPA"
@@ -189,9 +278,16 @@ platform :ios do
   lane :upload do
     data = algobot_release_data
 
+    # Verify the IPA before any upload.
     algobot_verify_ipa
 
+    # Authenticate with App Store Connect.
     api_key = algobot_api_key
+
+    # Block duplicate builds before preparing metadata
+    # or asking for upload confirmation.
+    algobot_check_store_version(data)
+
     metadata_dir = algobot_prepare_metadata(data)
 
     UI.header("AlgoBot App Store Connect Upload")
@@ -233,10 +329,12 @@ platform :ios do
   lane :retry_release do
     upload
   end
+
   desc "Verify existing IPA version and bundle identifier"
   lane :verify_ipa do
     algobot_verify_ipa
     UI.success("iOS IPA verification completed!")
   end
+
 end
 

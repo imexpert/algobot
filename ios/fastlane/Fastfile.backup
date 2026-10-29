@@ -1,6 +1,7 @@
 
 require "fileutils"
 require "shellwords"
+require "open3"
 
 default_platform(:ios)
 
@@ -109,6 +110,46 @@ def algobot_prepare_metadata(data)
   metadata_dir
 end
 
+# Verify the actual IPA metadata before building or uploading.
+def algobot_verify_ipa
+  UI.user_error!("IPA file not found: #{IPA_PATH}") unless File.file?(IPA_PATH)
+
+  entries, list_error, list_status = Open3.capture3("unzip", "-Z1", IPA_PATH)
+  UI.user_error!("Unable to inspect IPA: #{list_error}") unless list_status.success?
+
+  plist_path = entries.lines.map(&:strip).find do |entry|
+    entry.match?(%r{\APayload/[^/]+\.app/Info\.plist\z})
+  end
+  UI.user_error!("Main app Info.plist not found in IPA") unless plist_path
+
+  plist, unzip_error, unzip_status = Open3.capture3("unzip", "-p", IPA_PATH, plist_path)
+  UI.user_error!("Unable to read IPA Info.plist: #{unzip_error}") unless unzip_status.success?
+
+  values = {}
+  ["CFBundleShortVersionString", "CFBundleVersion", "CFBundleIdentifier"].each do |key|
+    value, error, status = Open3.capture3(
+      "plutil", "-extract", key, "raw", "-o", "-", "-",
+      stdin_data: plist
+    )
+    UI.user_error!("Unable to read #{key} from IPA: #{error}") unless status.success?
+    values[key] = value.strip
+  end
+
+  expected_name, expected_build = algobot_version.split("+")
+  expected = {
+    "CFBundleShortVersionString" => expected_name,
+    "CFBundleVersion" => expected_build,
+    "CFBundleIdentifier" => APP_IDENTIFIER
+  }
+
+  expected.each do |key, wanted|
+    actual = values.fetch(key)
+    UI.user_error!("IPA #{key} mismatch: expected #{wanted}, got #{actual}") unless actual == wanted
+  end
+
+  UI.success("iOS IPA version verified: #{expected_name}+#{expected_build}")
+end
+
 platform :ios do
   desc "Validate local Apple API key configuration"
   lane :check_auth do
@@ -139,7 +180,7 @@ platform :ios do
       sh("flutter build ipa --release")
     end
 
-    UI.user_error!("IPA file not found: #{IPA_PATH}") unless File.file?(IPA_PATH)
+    algobot_verify_ipa
 
     UI.success("IPA build completed: #{IPA_PATH}")
   end
@@ -148,7 +189,7 @@ platform :ios do
   lane :upload do
     data = algobot_release_data
 
-    UI.user_error!("IPA file not found: #{IPA_PATH}") unless File.file?(IPA_PATH)
+    algobot_verify_ipa
 
     api_key = algobot_api_key
     metadata_dir = algobot_prepare_metadata(data)
@@ -191,6 +232,11 @@ platform :ios do
   desc "Retry upload using existing IPA"
   lane :retry_release do
     upload
+  end
+  desc "Verify existing IPA version and bundle identifier"
+  lane :verify_ipa do
+    algobot_verify_ipa
+    UI.success("iOS IPA verification completed!")
   end
 end
 

@@ -5,6 +5,10 @@ require "open3"
 
 default_platform(:android)
 
+# --------------------------------------------------
+# AlgoBot paths
+# --------------------------------------------------
+
 ROOT_DIR = File.expand_path("../..", __dir__)
 NOTES_ROOT = File.join(ROOT_DIR, "release-notes")
 METADATA_PATH = File.join(__dir__, "metadata", "android")
@@ -14,7 +18,10 @@ AAB_PATH = File.join(
   "build/app/outputs/bundle/release/app-release.aab"
 )
 
+# --------------------------------------------------
 # Shared Flutter version
+# --------------------------------------------------
+
 def algobot_version
   pubspec = File.join(ROOT_DIR, "pubspec.yaml")
 
@@ -35,7 +42,10 @@ def algobot_version
   version
 end
 
+# --------------------------------------------------
 # Shared Turkish and English release notes
+# --------------------------------------------------
+
 def algobot_notes(version)
   directory = File.join(NOTES_ROOT, version)
   notes = {}
@@ -47,8 +57,13 @@ def algobot_notes(version)
 
     content = File.read(path, encoding: "UTF-8").strip
 
-    UI.user_error!("#{locale}: Release notes cannot be empty!") if content.empty?
-    UI.user_error!("#{locale}: Maximum 500 characters!") if content.length > 500
+    UI.user_error!(
+      "#{locale}: Release notes cannot be empty!"
+    ) if content.empty?
+
+    UI.user_error!(
+      "#{locale}: Maximum 500 characters!"
+    ) if content.length > 500
 
     notes[locale] = content
   end
@@ -56,7 +71,10 @@ def algobot_notes(version)
   notes
 end
 
-# Prepare Google Play release notes
+# --------------------------------------------------
+# Prepare Google Play changelogs
+# --------------------------------------------------
+
 def algobot_prepare_changelogs(version, notes)
   version_code = version.split("+").last
 
@@ -77,9 +95,14 @@ def algobot_prepare_changelogs(version, notes)
   end
 end
 
-# Read an attribute from the actual Android App Bundle
+# --------------------------------------------------
+# Read actual Android App Bundle attributes
+# --------------------------------------------------
+
 def algobot_aab_attribute(attribute)
-  UI.user_error!("AAB not found: #{AAB_PATH}") unless File.file?(AAB_PATH)
+  UI.user_error!(
+    "AAB not found: #{AAB_PATH}"
+  ) unless File.file?(AAB_PATH)
 
   bundletool = `command -v bundletool`.strip
 
@@ -106,7 +129,10 @@ def algobot_aab_attribute(attribute)
   output.strip
 end
 
-# Enforce versionName and versionCode consistency
+# --------------------------------------------------
+# Verify AAB version against pubspec.yaml
+# --------------------------------------------------
+
 def algobot_verify_aab
   expected_version = algobot_version
   expected_name, expected_code = expected_version.split("+")
@@ -116,18 +142,64 @@ def algobot_verify_aab
 
   unless actual_name == expected_name
     UI.user_error!(
-      "AAB versionName mismatch! Expected #{expected_name}, got #{actual_name}"
+      "AAB versionName mismatch! " \
+      "Expected #{expected_name}, got #{actual_name}"
     )
   end
 
   unless actual_code == expected_code
     UI.user_error!(
-      "AAB versionCode mismatch! Expected #{expected_code}, got #{actual_code}"
+      "AAB versionCode mismatch! " \
+      "Expected #{expected_code}, got #{actual_code}"
     )
   end
 
-  UI.success("Android AAB version verified: #{expected_version}")
+  UI.success(
+    "Android AAB version verified: #{expected_version}"
+  )
 end
+
+# --------------------------------------------------
+# Check Google Play existing version codes
+# --------------------------------------------------
+
+def algobot_check_google_play_version
+  version = algobot_version
+  version_code = version.split("+").last.to_i
+
+  UI.header("Google Play Version Check")
+  UI.message("Checking versionCode: #{version_code}")
+
+  tracks = [
+    "production",
+    "beta",
+    "alpha",
+    "internal"
+  ]
+
+  tracks.each do |track|
+    UI.message("Checking Google Play track: #{track}")
+
+    existing_codes = google_play_track_version_codes(
+      track: track
+    )
+
+    if existing_codes.map(&:to_i).include?(version_code)
+      UI.user_error!(
+        "Build #{version_code} already exists on " \
+        "Google Play track '#{track}'. Upload blocked!"
+      )
+    end
+  end
+
+  UI.success(
+    "Build #{version_code} not found on checked Google Play tracks."
+  )
+end
+
+# --------------------------------------------------
+# Android Fastlane lanes
+# --------------------------------------------------
 
 platform :android do
 
@@ -155,11 +227,18 @@ platform :android do
     end
 
     Dir.chdir(ROOT_DIR) do
-      sh("bash scripts/bump_version.sh #{release_type}")
+      sh(
+        "bash scripts/bump_version.sh #{release_type}"
+      )
     end
 
-    UI.success("New shared version: #{algobot_version}")
-    UI.message("Prepare release notes and iOS promotional texts.")
+    UI.success(
+      "New shared version: #{algobot_version}"
+    )
+
+    UI.message(
+      "Prepare release notes and iOS promotional texts."
+    )
   end
 
   desc "Build Flutter Android App Bundle"
@@ -171,7 +250,9 @@ platform :android do
 
     algobot_verify_aab
 
-    UI.success("Android AAB build completed!")
+    UI.success(
+      "Android AAB build completed!"
+    )
   end
 
   desc "Validate Android release metadata"
@@ -186,7 +267,19 @@ platform :android do
       UI.message("#{locale}: #{content}")
     end
 
-    UI.success("Android release metadata validated!")
+    UI.success(
+      "Android release metadata validated!"
+    )
+  end
+
+  desc "Check Google Play for an existing build number"
+  lane :check_store_version do
+    algobot_check_google_play_version
+  end
+
+  desc "Verify the existing Android AAB"
+  lane :verify_aab do
+    algobot_verify_aab
   end
 
   desc "Upload existing AAB to Google Play Production"
@@ -194,7 +287,12 @@ platform :android do
     version = algobot_version
     notes = algobot_notes(version)
 
+    # Verify actual AAB version and build number.
     algobot_verify_aab
+
+    # Block builds found on checked Google Play tracks.
+    algobot_check_google_play_version
+
     algobot_prepare_changelogs(version, notes)
 
     UI.header("AlgoBot Google Play Upload")
@@ -202,7 +300,9 @@ platform :android do
     UI.message("Track: production")
     UI.message("AAB: #{AAB_PATH}")
 
-    unless UI.confirm("Upload this AAB to Google Play Production?")
+    unless UI.confirm(
+      "Upload this AAB to Google Play Production?"
+    )
       UI.message("Android upload cancelled.")
       next
     end
@@ -219,7 +319,9 @@ platform :android do
       changes_not_sent_for_review: false
     )
 
-    UI.success("AlgoBot Android Production upload completed!")
+    UI.success(
+      "AlgoBot Android Production upload completed!"
+    )
   end
 
   desc "Build and upload current shared version"

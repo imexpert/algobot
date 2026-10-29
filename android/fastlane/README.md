@@ -39,6 +39,22 @@ Build Flutter Android App Bundle
 
 Validate Android release metadata
 
+### android check_store_version
+
+```sh
+[bundle exec] fastlane android check_store_version
+```
+
+Check Google Play for an existing build number
+
+### android verify_aab
+
+```sh
+[bundle exec] fastlane android verify_aab
+```
+
+Verify the existing Android AAB
+
 ### android upload
 
 ```sh

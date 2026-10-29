@@ -31,6 +31,14 @@ Validate local Apple API key configuration
 
 Validate version and localized release metadata
 
+### ios check_store_version
+
+```sh
+[bundle exec] fastlane ios check_store_version
+```
+
+Check whether current build already exists on App Store Connect
+
 ### ios build
 
 ```sh
