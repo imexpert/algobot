@@ -749,8 +749,8 @@ abstract class AppLocalizations {
   /// No description provided for @about.
   ///
   /// In en, this message translates to:
-  /// **'AlgoBot is a puzzle game that teaches kids to think like programmers. No data collected. No internet needed to play. Characters unlock only by playing; there are no purchases.'**
-  String get about;
+  /// **'AlgoBot is a puzzle game that teaches kids to think like programmers. {privacy} No internet needed to play. Characters unlock only by playing; there are no purchases.'**
+  String about(String privacy);
 
   /// No description provided for @rateApp.
   ///
@@ -1765,6 +1765,114 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Watch! Tap Got it when you\'re ready.'**
   String get tutMechWatch;
+
+  /// No description provided for @achievements.
+  ///
+  /// In en, this message translates to:
+  /// **'Achievements'**
+  String get achievements;
+
+  /// Başarım adı (anahtara göre)
+  ///
+  /// In en, this message translates to:
+  /// **'{key, select, tutorial_done{Ready to Learn} first_level{First Step} first_perfect{Flawless} last_life{Never Give Up} world_5_7{Little Engineer} world_8_12{Factory Master} world_13_plus{Master Coder} stars_12{Star Collector} stars_36{Star Hunter} stars_72{Superstar} stars_144{Galaxy} perfect_world{Zero Mistakes} friends_4{New Friends} friends_8{Full Team} ice_master{Ice Skater} key_master{Key Keeper} portal_master{Beam Me Over} other{?}}'**
+  String achievementName(String key);
+
+  /// Başarım açıklaması (anahtara göre)
+  ///
+  /// In en, this message translates to:
+  /// **'{key, select, tutorial_done{Finish a tutorial from start to end.} first_level{Solve your first level.} first_perfect{Earn 3 stars on a level.} last_life{Solve a level with your last life.} world_5_7{Solve all 16 levels in the ages 5–7 set.} world_8_12{Solve all 16 levels in the ages 8–12 set.} world_13_plus{Solve all 16 levels in the ages 13+ set.} stars_12{Collect 12 stars in total.} stars_36{Collect 36 stars in total.} stars_72{Collect 72 stars in total.} stars_144{Collect all 144 stars.} perfect_world{Earn 3 stars on all 8 levels of a world.} friends_4{Unlock 4 characters.} friends_8{Unlock all 8 characters.} ice_master{In the 13+ set, solve the level where ice first appears.} key_master{In the 13+ set, solve the level where keys and doors first appear.} portal_master{In the 13+ set, solve the level where portals first appear.} other{?}}'**
+  String achievementDesc(String key);
+
+  /// No description provided for @achievementsSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'{unlocked} / {total} achievements'**
+  String achievementsSummary(int unlocked, int total);
+
+  /// No description provided for @achievementUnlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Achievement unlocked!'**
+  String get achievementUnlocked;
+
+  /// No description provided for @achievementLocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Locked'**
+  String get achievementLocked;
+
+  /// No description provided for @achievementProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'{progress} / {target}'**
+  String achievementProgress(int progress, int target);
+
+  /// No description provided for @achievementsParentArea.
+  ///
+  /// In en, this message translates to:
+  /// **'Grown-ups only'**
+  String get achievementsParentArea;
+
+  /// Platformun kendi başarımlar ekranı (playGames / gameCenter)
+  ///
+  /// In en, this message translates to:
+  /// **'{service, select, playGames{View on Google Play Games} other{View in Game Center}}'**
+  String viewOnGamePlatform(String service);
+
+  /// No description provided for @openLeaderboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Leaderboard: Total Stars'**
+  String get openLeaderboard;
+
+  /// No description provided for @leaderboardName.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Stars'**
+  String get leaderboardName;
+
+  /// Gizlilik cümlesi; oyun platformuna göre (playGames / gameCenter / none)
+  ///
+  /// In en, this message translates to:
+  /// **'{service, select, playGames{No in-game data is collected. Google Play Games is optionally used for achievements.} gameCenter{No in-game data is collected. Game Center is optionally used for achievements.} other{No data collected.}}'**
+  String aboutPrivacy(String service);
+
+  /// No description provided for @resetAchievementsKept.
+  ///
+  /// In en, this message translates to:
+  /// **'Earned achievements will not be removed.'**
+  String get resetAchievementsKept;
+
+  /// No description provided for @gameAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Game account'**
+  String get gameAccount;
+
+  /// Ebeveyn paneli: elle bağlanma butonu (playGames / gameCenter)
+  ///
+  /// In en, this message translates to:
+  /// **'{service, select, playGames{Connect to Play Games} other{Connect to Game Center}}'**
+  String connectGamePlatform(String service);
+
+  /// Ebeveyn paneli: bağlı durumu (playGames / gameCenter)
+  ///
+  /// In en, this message translates to:
+  /// **'{service, select, playGames{Connected to Play Games} other{Connected to Game Center}}'**
+  String connectedGamePlatform(String service);
+
+  /// No description provided for @connectFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t connect. You can try again later.'**
+  String get connectFailed;
+
+  /// No description provided for @gameCenterSettingsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in from Settings > Game Center, then reopen the app.'**
+  String get gameCenterSettingsHint;
 }
 
 class _AppLocalizationsDelegate

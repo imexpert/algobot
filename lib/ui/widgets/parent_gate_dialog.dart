@@ -7,10 +7,13 @@ import '../../core/colors.dart';
 import '../../l10n/l10n.dart';
 import '../../models/age_group.dart';
 import '../../data/session_repository.dart';
+import '../../games/achievement_sync.dart';
+import '../../games/game_config.dart';
 import '../../review/review_service.dart';
 import '../../state/progress_controller.dart';
 import '../../state/settings_controller.dart';
 import 'app_button.dart';
+import 'game_platform_buttons.dart';
 
 /// Ebeveyn kapısı: iki basamaklı toplama sorusu, doğru cevapta ayarlar.
 /// [verifyOnly] ise ayarlar açılmaz, doğru cevapta `true` ile kapanır.
@@ -225,9 +228,21 @@ class _SettingsPanelState extends State<_SettingsPanel> {
           context.l10n.resetConfirmTitle,
           style: TextStyle(color: AppColors.textPrimary, fontSize: 22),
         ),
-        content: Text(
-          context.l10n.resetConfirmBody,
-          style: TextStyle(color: AppColors.textSecondary, fontSize: 16),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              context.l10n.resetConfirmBody,
+              style: TextStyle(color: AppColors.textSecondary, fontSize: 16),
+            ),
+            const SizedBox(height: 8),
+            // Sıfırlama achievement_state tablosuna dokunmaz.
+            Text(
+              context.l10n.resetAchievementsKept,
+              style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
+            ),
+          ],
         ),
         actions: [
           TextButton(
@@ -257,6 +272,7 @@ class _SettingsPanelState extends State<_SettingsPanel> {
   @override
   Widget build(BuildContext context) {
     final settings = context.watch<SettingsController>();
+    final sync = context.watch<AchievementSync?>();
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -333,9 +349,27 @@ class _SettingsPanelState extends State<_SettingsPanel> {
           icon: Icons.star_rounded,
           onPressed: () => context.read<ReviewService>().openStore(),
         ),
+        // Oyun hesabı: elle bağlanma (yalnızca burada; panel kapı arkasında).
+        if (sync != null && sync.platformKind != GamePlatformKind.none) ...[
+          const SizedBox(height: 16),
+          GameAccountSection(sync: sync),
+        ],
+        // Skor tablosu: yalnızca oturum açıksa (panel zaten kapı arkasında).
+        if (sync != null && sync.isSignedIn) ...[
+          const SizedBox(height: 16),
+          GamePlatformButtons(
+            sync: sync,
+            gated: false,
+            showAchievements: false,
+          ),
+        ],
         const SizedBox(height: 16),
         Text(
-          context.l10n.about,
+          context.l10n.about(
+            context.l10n.aboutPrivacy(
+              (sync?.platformKind ?? GamePlatformKind.none).name,
+            ),
+          ),
           style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
         ),
         const SizedBox(height: 12),

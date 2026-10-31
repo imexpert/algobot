@@ -5,6 +5,7 @@ import '../../audio/sound_service.dart';
 import '../../characters/character_registry.dart';
 import '../../core/colors.dart';
 import '../../data/session_repository.dart';
+import '../../games/achievement_sync.dart';
 import '../../jokers/joker_type.dart';
 import '../../l10n/l10n.dart';
 import '../../models/age_config.dart';
@@ -18,6 +19,7 @@ import '../../tutorial/mechanic_intro.dart';
 import '../../tutorial/tutorial_controller.dart';
 import '../../tutorial/tutorial_scripts.dart';
 import '../tutorial/tutorial_screen.dart';
+import '../widgets/achievement_toast.dart';
 import '../widgets/game_layout.dart';
 import '../widgets/hint_bubble.dart';
 import '../widgets/joker_bar.dart';
@@ -178,6 +180,18 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     final result = _game.lastResult;
     if (result == null || !mounted) return;
     final progress = context.read<ProgressController>();
+    // Başarımlar hemen hesaplanıp kaydedilir; bildirim panelden sonra.
+    final sync = context.read<AchievementSync?>();
+    final achieved =
+        sync?.update(
+          achievementFacts(
+            progress,
+            context.read<SettingsController>(),
+            solvedOnLastLife: _game.solvedOnLastLife,
+          ),
+        ) ??
+        const [];
+    sync?.submitTotalStars(progress.totalStarsAll);
     final action = await ResultSheet.show(
       context,
       level: widget.level,
@@ -201,6 +215,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       }
     }
     if (!mounted) return;
+    AchievementToast.show(context, achieved);
     if (!switched) await _maybeAskForReview();
     if (!mounted) return;
     if (switched && action != ResultAction.next) {

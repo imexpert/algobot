@@ -9,6 +9,8 @@ import 'data/db/app_database.dart';
 import 'data/levels.dart';
 import 'data/progress_repository.dart';
 import 'data/session_repository.dart';
+import 'games/achievement_sync.dart';
+import 'games/games_services_platform.dart';
 import 'review/review_service.dart';
 import 'rewards/rewarded_video_service.dart';
 import 'rewards/stub_rewarded_video_service.dart';
@@ -21,12 +23,16 @@ class AppServices {
     required this.sessions,
     required this.video,
     required this.review,
+    required this.achievements,
   });
 
   final ProgressController progress;
   final SessionRepository sessions;
   final RewardedVideoService video;
   final ReviewService review;
+
+  /// Başarımlar ve skor (yerel tablo + Play Games / Game Center).
+  final AchievementSync achievements;
 }
 
 /// Açılış animasyonuyla paralel yürüyen başlangıç işleri: veritabanı ve
@@ -55,12 +61,25 @@ Future<AppServices> loadAppServices(
     // bitti panelinde gösterilmez. Açmak için `available: true` (ya da
     // gerçek reklam SDK'sı entegre edilince yalnızca bu satır değişir).
     final video = StubRewardedVideoService(available: false);
-    await Future.wait([progress.load(), sessions.load(), video.preload()]);
+    // Platform oturumu burada açılmaz: açılış ekranı bittikten sonra
+    // (ana ekranda) sessizce denenir.
+    final achievements = AchievementSync(
+      database: database,
+      platform: createGamePlatformService(prefs),
+      prefs: prefs,
+    );
+    await Future.wait([
+      progress.load(),
+      sessions.load(),
+      video.preload(),
+      achievements.load(),
+    ]);
     return AppServices(
       progress: progress,
       sessions: sessions,
       video: video,
       review: ReviewService(prefs),
+      achievements: achievements,
     );
   }
 

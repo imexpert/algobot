@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Google Play Games Services kimlikleri.
+  Play Console > Play Games Services > Yapılandırma sayfasındaki
+  "Proje kimliği" (yalnızca rakamlardan oluşan uzun sayı) buraya yazılır.
+  Yer tutucu duruyorken Play Games başlatılmaz; oyun normal çalışır.
+  Ayrıntılar: store/KONSOL_KURULUM.md
+-->
+<resources>
+    <string name="game_services_project_id" translatable="false">REPLACE_WITH_PLAY_GAMES_PROJECT_ID</string>
+</resources>

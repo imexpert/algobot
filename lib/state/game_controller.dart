@@ -411,6 +411,11 @@ class GameController extends ChangeNotifier {
   }
 
   // --- Canlar (kalıcı, seviye bazında) ---
+  bool _solvedOnLastLife = false;
+
+  /// Son başarılı çalıştırma, seviyenin son canıyla mı yapıldı.
+  bool get solvedOnLastLife => _solvedOnLastLife;
+
   int get livesMax => AgeSettings.maxLives;
   int get lives =>
       tutorialMode ? AgeSettings.maxLives : _sessions.sessionFor(level).lives;
@@ -959,6 +964,8 @@ class GameController extends ChangeNotifier {
       case RunOutcome.success:
         _phase = GamePhase.success;
         _lastStars = StarCalculator.stars(level, result);
+        // Oturum silinmeden önce: son canla mı çözüldü (başarım).
+        _solvedOnLastLife = !tutorialMode && lives == 1;
         if (!tutorialMode) {
           _progress.record(level, _lastStars);
           // Çözüldü: canlar ve jokerler yenilenir (oturum silinir).

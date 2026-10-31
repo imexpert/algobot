@@ -112,9 +112,47 @@ void main() {
     expect(en.nextLife('07:32'), 'Next life: 07:32');
     expect(tr.jokerSkip, 'Atla');
     expect(en.jokerVideo, 'Video');
-    expect(tr.about, contains('Veri toplanmaz.'));
-    expect(tr.about, isNot(contains('Reklam yok')));
-    expect(en.about, contains('No data collected.'));
+    String trAbout(String s) => tr.about(tr.aboutPrivacy(s));
+    String enAbout(String s) => en.about(en.aboutPrivacy(s));
+    expect(trAbout('none'), contains('Veri toplanmaz.'));
+    expect(trAbout('none'), isNot(contains('Reklam yok')));
+    expect(enAbout('none'), contains('No data collected.'));
+    // Oyun platformuna göre doğru servis adı.
+    expect(
+      trAbout('playGames'),
+      contains(
+        'Oyun içi veri toplanmaz. Başarımlar için isteğe bağlı olarak '
+        'Google Play Games kullanılır.',
+      ),
+    );
+    expect(trAbout('gameCenter'), contains('Game Center kullanılır.'));
+    expect(trAbout('gameCenter'), isNot(contains('Google')));
+    expect(enAbout('playGames'), contains('Google Play Games is optionally'));
+    expect(enAbout('gameCenter'), contains('Game Center is optionally'));
+    // Sıfırlama notu ve oyun hesabı metinleri iki dilde.
+    expect(tr.resetAchievementsKept, 'Kazanılan başarımlar silinmez.');
+    expect(
+      en.resetAchievementsKept,
+      'Earned achievements will not be removed.',
+    );
+    expect(tr.connectGamePlatform('playGames'), "Play Games'e bağlan");
+    expect(tr.connectGamePlatform('gameCenter'), "Game Center'a bağlan");
+    expect(en.connectGamePlatform('playGames'), 'Connect to Play Games');
+    expect(en.connectedGamePlatform('gameCenter'), 'Connected to Game Center');
+    expect(tr.connectedGamePlatform('playGames'), "Play Games'e bağlı");
+    expect(
+      tr.connectFailed,
+      'Bağlanılamadı, daha sonra tekrar deneyebilirsin.',
+    );
+    expect(en.connectFailed, "Couldn't connect. You can try again later.");
+    expect(
+      tr.gameCenterSettingsHint,
+      "Ayarlar > Game Center'dan giriş yapıp uygulamayı yeniden açın.",
+    );
+    expect(
+      en.gameCenterSettingsHint,
+      'Sign in from Settings > Game Center, then reopen the app.',
+    );
     expect(en.starsLabel(1), '1 star out of 3');
     expect(en.starsLabel(2), '2 stars out of 3');
     expect(tr.collectedCount('pati', 1, 2), 'Balıklar: 1 / 2');

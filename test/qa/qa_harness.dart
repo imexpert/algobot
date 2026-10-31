@@ -1,5 +1,8 @@
 // QA testleri için ortak kurulum: gerçek AlgoBotApp, bellek içi veritabanı,
 // sahte saat, sahte ses ve sahte mağaza değerlendirmesi.
+import 'package:algobot/games/achievement_sync.dart';
+import 'package:algobot/games/game_platform_service.dart';
+import 'package:algobot/games/noop_game_platform.dart';
 import 'package:algobot/app.dart';
 import 'package:algobot/app_services.dart';
 import 'package:algobot/audio/sound_service.dart';
@@ -75,6 +78,7 @@ class QaApp {
     this.clock,
     this.sound,
     this.review,
+    this.achievements,
   );
   final SettingsController settings;
   final ProgressController progress;
@@ -83,6 +87,7 @@ class QaApp {
   final FakeClock clock;
   final QaSound sound;
   final FakeReviewPlatform review;
+  final AchievementSync achievements;
 }
 
 Future<QaApp> qaSetUp(
@@ -99,6 +104,7 @@ Future<QaApp> qaSetUp(
   FakeClock? clock,
   AppDatabase? database,
   bool seenTutorial = true,
+  GamePlatformService? gamePlatform,
 }) async {
   SharedPreferences.setMockInitialValues({
     'sound_on': soundOn,
@@ -132,6 +138,11 @@ Future<QaApp> qaSetUp(
   addTearDown(tester.view.reset);
   addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
   final sound = QaSound(settings);
+  final achievements = AchievementSync(
+    database: db,
+    platform: gamePlatform ?? const NoopGamePlatform(),
+    prefs: sp,
+  );
   final review = FakeReviewPlatform();
   await tester.pumpWidget(
     AlgoBotApp(
@@ -143,6 +154,7 @@ Future<QaApp> qaSetUp(
           sessions: sessions,
           video: video ?? StubRewardedVideoService(available: false),
           review: ReviewService(sp, platform: review, clock: c),
+          achievements: achievements,
         ),
       ),
       showSplash: showSplash,
@@ -150,7 +162,16 @@ Future<QaApp> qaSetUp(
     ),
   );
   await tester.pump();
-  return QaApp(settings, progress, sessions, db, c, sound, review);
+  return QaApp(
+    settings,
+    progress,
+    sessions,
+    db,
+    c,
+    sound,
+    review,
+    achievements,
+  );
 }
 
 /// Sonsuz animasyonlar olduğu için pumpAndSettle kullanılamaz.

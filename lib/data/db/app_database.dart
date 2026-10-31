@@ -10,7 +10,7 @@ class AppDatabase {
   final Database db;
 
   static const fileName = 'algobot.db';
-  static const version = 1;
+  static const version = 2;
 
   /// Sürüm → o sürüme geçişte çalışacak SQL komutları.
   static const Map<int, List<String>> _migrations = {
@@ -37,6 +37,18 @@ class AppDatabase {
         program          TEXT    NOT NULL DEFAULT '',
         updated_at       INTEGER NOT NULL,
         PRIMARY KEY (age_group, level_id)
+      )''',
+    ],
+    // Başarımlar: yerel durum ve platforma gönderildi mi (`reported`).
+    2: [
+      '''
+      CREATE TABLE achievement_state (
+        achievement_key TEXT PRIMARY KEY,
+        unlocked        INTEGER NOT NULL DEFAULT 0,
+        progress        INTEGER NOT NULL DEFAULT 0,
+        target          INTEGER NOT NULL DEFAULT 1,
+        reported        INTEGER NOT NULL DEFAULT 0,
+        unlocked_at     INTEGER
       )''',
     ],
   };

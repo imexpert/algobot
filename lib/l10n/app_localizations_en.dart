@@ -469,8 +469,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get resetDone => 'Progress reset.';
 
   @override
-  String get about =>
-      'AlgoBot is a puzzle game that teaches kids to think like programmers. No data collected. No internet needed to play. Characters unlock only by playing; there are no purchases.';
+  String about(String privacy) {
+    return 'AlgoBot is a puzzle game that teaches kids to think like programmers. $privacy No internet needed to play. Characters unlock only by playing; there are no purchases.';
+  }
 
   @override
   String get rateApp => 'Rate the app';
@@ -1045,4 +1046,137 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tutMechWatch => 'Watch! Tap Got it when you\'re ready.';
+
+  @override
+  String get achievements => 'Achievements';
+
+  @override
+  String achievementName(String key) {
+    String _temp0 = intl.Intl.selectLogic(key, {
+      'tutorial_done': 'Ready to Learn',
+      'first_level': 'First Step',
+      'first_perfect': 'Flawless',
+      'last_life': 'Never Give Up',
+      'world_5_7': 'Little Engineer',
+      'world_8_12': 'Factory Master',
+      'world_13_plus': 'Master Coder',
+      'stars_12': 'Star Collector',
+      'stars_36': 'Star Hunter',
+      'stars_72': 'Superstar',
+      'stars_144': 'Galaxy',
+      'perfect_world': 'Zero Mistakes',
+      'friends_4': 'New Friends',
+      'friends_8': 'Full Team',
+      'ice_master': 'Ice Skater',
+      'key_master': 'Key Keeper',
+      'portal_master': 'Beam Me Over',
+      'other': '?',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String achievementDesc(String key) {
+    String _temp0 = intl.Intl.selectLogic(key, {
+      'tutorial_done': 'Finish a tutorial from start to end.',
+      'first_level': 'Solve your first level.',
+      'first_perfect': 'Earn 3 stars on a level.',
+      'last_life': 'Solve a level with your last life.',
+      'world_5_7': 'Solve all 16 levels in the ages 5–7 set.',
+      'world_8_12': 'Solve all 16 levels in the ages 8–12 set.',
+      'world_13_plus': 'Solve all 16 levels in the ages 13+ set.',
+      'stars_12': 'Collect 12 stars in total.',
+      'stars_36': 'Collect 36 stars in total.',
+      'stars_72': 'Collect 72 stars in total.',
+      'stars_144': 'Collect all 144 stars.',
+      'perfect_world': 'Earn 3 stars on all 8 levels of a world.',
+      'friends_4': 'Unlock 4 characters.',
+      'friends_8': 'Unlock all 8 characters.',
+      'ice_master': 'In the 13+ set, solve the level where ice first appears.',
+      'key_master':
+          'In the 13+ set, solve the level where keys and doors first appear.',
+      'portal_master':
+          'In the 13+ set, solve the level where portals first appear.',
+      'other': '?',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String achievementsSummary(int unlocked, int total) {
+    return '$unlocked / $total achievements';
+  }
+
+  @override
+  String get achievementUnlocked => 'Achievement unlocked!';
+
+  @override
+  String get achievementLocked => 'Locked';
+
+  @override
+  String achievementProgress(int progress, int target) {
+    return '$progress / $target';
+  }
+
+  @override
+  String get achievementsParentArea => 'Grown-ups only';
+
+  @override
+  String viewOnGamePlatform(String service) {
+    String _temp0 = intl.Intl.selectLogic(service, {
+      'playGames': 'View on Google Play Games',
+      'other': 'View in Game Center',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get openLeaderboard => 'Leaderboard: Total Stars';
+
+  @override
+  String get leaderboardName => 'Total Stars';
+
+  @override
+  String aboutPrivacy(String service) {
+    String _temp0 = intl.Intl.selectLogic(service, {
+      'playGames':
+          'No in-game data is collected. Google Play Games is optionally used for achievements.',
+      'gameCenter':
+          'No in-game data is collected. Game Center is optionally used for achievements.',
+      'other': 'No data collected.',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get resetAchievementsKept =>
+      'Earned achievements will not be removed.';
+
+  @override
+  String get gameAccount => 'Game account';
+
+  @override
+  String connectGamePlatform(String service) {
+    String _temp0 = intl.Intl.selectLogic(service, {
+      'playGames': 'Connect to Play Games',
+      'other': 'Connect to Game Center',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String connectedGamePlatform(String service) {
+    String _temp0 = intl.Intl.selectLogic(service, {
+      'playGames': 'Connected to Play Games',
+      'other': 'Connected to Game Center',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get connectFailed => 'Couldn\'t connect. You can try again later.';
+
+  @override
+  String get gameCenterSettingsHint =>
+      'Sign in from Settings > Game Center, then reopen the app.';
 }

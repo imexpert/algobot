@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'app_services.dart';
 import 'audio/sound_service.dart';
 import 'core/colors.dart';
+import 'games/achievement_sync.dart';
 import 'l10n/l10n.dart';
 import 'review/review_service.dart';
 import 'rewards/rewarded_video_service.dart';
@@ -42,12 +43,28 @@ class AlgoBotApp extends StatefulWidget {
 class _AlgoBotAppState extends State<AlgoBotApp> {
   AppServices? _services;
 
+  /// Uygulama öne gelince oyun platformu oturumu sessizce yeniden kontrol
+  /// edilir (oturum sonradan açıldıysa bekleyen başarımlar gönderilir).
+  late final AppLifecycleListener _lifecycle = AppLifecycleListener(
+    onResume: () {
+      final sync = _services?.achievements;
+      if (sync != null && sync.started) sync.signInAndSync();
+    },
+  );
+
   @override
   void initState() {
     super.initState();
+    _lifecycle;
     widget.services.then((s) {
       if (mounted) setState(() => _services = s);
     });
+  }
+
+  @override
+  void dispose() {
+    _lifecycle.dispose();
+    super.dispose();
   }
 
   @override
@@ -100,6 +117,9 @@ class _AlgoBotAppState extends State<AlgoBotApp> {
                     ChangeNotifierProvider.value(value: services.sessions),
                     Provider<RewardedVideoService>.value(value: services.video),
                     Provider<ReviewService>.value(value: services.review),
+                    ChangeNotifierProvider<AchievementSync>.value(
+                      value: services.achievements,
+                    ),
                   ],
                   child: child,
                 ),

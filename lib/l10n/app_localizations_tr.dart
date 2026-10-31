@@ -460,8 +460,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get resetDone => 'İlerleme sıfırlandı.';
 
   @override
-  String get about =>
-      'AlgoBot, çocuklara programcı gibi düşünmeyi öğreten bir bulmaca oyunudur. Veri toplanmaz. Oynamak için internet gerekmez. Karakterler yalnızca oynayarak açılır; satın alma yoktur.';
+  String about(String privacy) {
+    return 'AlgoBot, çocuklara programcı gibi düşünmeyi öğreten bir bulmaca oyunudur. $privacy Oynamak için internet gerekmez. Karakterler yalnızca oynayarak açılır; satın alma yoktur.';
+  }
 
   @override
   String get rateApp => 'Uygulamayı değerlendir';
@@ -1032,4 +1033,136 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get tutMechWatch => 'İzle! Hazır olunca Anladım\'a bas.';
+
+  @override
+  String get achievements => 'Başarımlar';
+
+  @override
+  String achievementName(String key) {
+    String _temp0 = intl.Intl.selectLogic(key, {
+      'tutorial_done': 'Öğrenmeye Hazır',
+      'first_level': 'İlk Adım',
+      'first_perfect': 'Kusursuz',
+      'last_life': 'Pes Etmek Yok',
+      'world_5_7': 'Küçük Mühendis',
+      'world_8_12': 'Fabrika Ustası',
+      'world_13_plus': 'Usta Programcı',
+      'stars_12': 'Yıldız Toplayıcı',
+      'stars_36': 'Yıldız Avcısı',
+      'stars_72': 'Süper Yıldız',
+      'stars_144': 'Galaksi',
+      'perfect_world': 'Sıfır Hata',
+      'friends_4': 'Yeni Arkadaşlar',
+      'friends_8': 'Tam Takım',
+      'ice_master': 'Buz Patencisi',
+      'key_master': 'Anahtar Ustası',
+      'portal_master': 'Işınlan!',
+      'other': '?',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String achievementDesc(String key) {
+    String _temp0 = intl.Intl.selectLogic(key, {
+      'tutorial_done': 'Bir eğitimi baştan sona tamamla.',
+      'first_level': 'İlk seviyeni çöz.',
+      'first_perfect': 'Bir seviyede 3 yıldız kazan.',
+      'last_life': 'Son canınla bir seviyeyi çöz.',
+      'world_5_7': '5–7 yaş setindeki 16 seviyenin hepsini çöz.',
+      'world_8_12': '8–12 yaş setindeki 16 seviyenin hepsini çöz.',
+      'world_13_plus': '13+ yaş setindeki 16 seviyenin hepsini çöz.',
+      'stars_12': 'Toplam 12 yıldız topla.',
+      'stars_36': 'Toplam 36 yıldız topla.',
+      'stars_72': 'Toplam 72 yıldız topla.',
+      'stars_144': '144 yıldızın hepsini topla.',
+      'perfect_world': 'Bir dünyanın 8 seviyesinin hepsinde 3 yıldız kazan.',
+      'friends_4': '4 karakterin kilidini aç.',
+      'friends_8': '8 karakterin hepsinin kilidini aç.',
+      'ice_master': '13+ setinde buzun ilk göründüğü seviyeyi çöz.',
+      'key_master':
+          '13+ setinde anahtar ve kapının ilk göründüğü seviyeyi çöz.',
+      'portal_master': '13+ setinde portalların ilk göründüğü seviyeyi çöz.',
+      'other': '?',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String achievementsSummary(int unlocked, int total) {
+    return '$unlocked / $total başarım';
+  }
+
+  @override
+  String get achievementUnlocked => 'Yeni başarım!';
+
+  @override
+  String get achievementLocked => 'Kilitli';
+
+  @override
+  String achievementProgress(int progress, int target) {
+    return '$progress / $target';
+  }
+
+  @override
+  String get achievementsParentArea => 'Yalnızca ebeveynler için';
+
+  @override
+  String viewOnGamePlatform(String service) {
+    String _temp0 = intl.Intl.selectLogic(service, {
+      'playGames': 'Google Play Games\'te gör',
+      'other': 'Game Center\'da gör',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get openLeaderboard => 'Skor tablosu: Toplam Yıldız';
+
+  @override
+  String get leaderboardName => 'Toplam Yıldız';
+
+  @override
+  String aboutPrivacy(String service) {
+    String _temp0 = intl.Intl.selectLogic(service, {
+      'playGames':
+          'Oyun içi veri toplanmaz. Başarımlar için isteğe bağlı olarak Google Play Games kullanılır.',
+      'gameCenter':
+          'Oyun içi veri toplanmaz. Başarımlar için isteğe bağlı olarak Game Center kullanılır.',
+      'other': 'Veri toplanmaz.',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get resetAchievementsKept => 'Kazanılan başarımlar silinmez.';
+
+  @override
+  String get gameAccount => 'Oyun hesabı';
+
+  @override
+  String connectGamePlatform(String service) {
+    String _temp0 = intl.Intl.selectLogic(service, {
+      'playGames': 'Play Games\'e bağlan',
+      'other': 'Game Center\'a bağlan',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String connectedGamePlatform(String service) {
+    String _temp0 = intl.Intl.selectLogic(service, {
+      'playGames': 'Play Games\'e bağlı',
+      'other': 'Game Center\'a bağlı',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get connectFailed =>
+      'Bağlanılamadı, daha sonra tekrar deneyebilirsin.';
+
+  @override
+  String get gameCenterSettingsHint =>
+      'Ayarlar > Game Center\'dan giriş yapıp uygulamayı yeniden açın.';
 }

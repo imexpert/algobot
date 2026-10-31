@@ -1,0 +1,18 @@
+sira,anahtar,ad_tr,ad_en,aciklama_tr,aciklama_en,tur,hedef_adim,puan,gizli,ios_kimlik_onerilen,rozet_dosyasi
+1,tutorial_done,Öğrenmeye Hazır,Ready to Learn,Bir eğitimi baştan sona tamamla.,Finish a tutorial from start to end.,tek seferlik,1,10,hayır,com.fabsora.algobot.ach.tutorial_done,badges/tutorial_done.png
+2,first_level,İlk Adım,First Step,İlk seviyeni çöz.,Solve your first level.,tek seferlik,1,10,hayır,com.fabsora.algobot.ach.first_level,badges/first_level.png
+3,first_perfect,Kusursuz,Flawless,Bir seviyede 3 yıldız kazan.,Earn 3 stars on a level.,tek seferlik,1,20,hayır,com.fabsora.algobot.ach.first_perfect,badges/first_perfect.png
+4,last_life,Pes Etmek Yok,Never Give Up,Son canınla bir seviyeyi çöz.,Solve a level with your last life.,tek seferlik,1,20,hayır,com.fabsora.algobot.ach.last_life,badges/last_life.png
+5,world_5_7,Küçük Mühendis,Little Engineer,5–7 yaş setindeki 16 seviyenin hepsini çöz.,Solve all 16 levels in the ages 5–7 set.,tek seferlik,1,50,hayır,com.fabsora.algobot.ach.world_5_7,badges/world_5_7.png
+6,world_8_12,Fabrika Ustası,Factory Master,8–12 yaş setindeki 16 seviyenin hepsini çöz.,Solve all 16 levels in the ages 8–12 set.,tek seferlik,1,50,hayır,com.fabsora.algobot.ach.world_8_12,badges/world_8_12.png
+7,world_13_plus,Usta Programcı,Master Coder,13+ yaş setindeki 16 seviyenin hepsini çöz.,Solve all 16 levels in the ages 13+ set.,tek seferlik,1,75,hayır,com.fabsora.algobot.ach.world_13_plus,badges/world_13_plus.png
+8,stars_12,Yıldız Toplayıcı,Star Collector,Toplam 12 yıldız topla.,Collect 12 stars in total.,artan,12,25,hayır,com.fabsora.algobot.ach.stars_12,badges/stars_12.png
+9,stars_36,Yıldız Avcısı,Star Hunter,Toplam 36 yıldız topla.,Collect 36 stars in total.,artan,36,50,hayır,com.fabsora.algobot.ach.stars_36,badges/stars_36.png
+10,stars_72,Süper Yıldız,Superstar,Toplam 72 yıldız topla.,Collect 72 stars in total.,artan,72,75,hayır,com.fabsora.algobot.ach.stars_72,badges/stars_72.png
+11,stars_144,Galaksi,Galaxy,144 yıldızın hepsini topla.,Collect all 144 stars.,artan,144,100,hayır,com.fabsora.algobot.ach.stars_144,badges/stars_144.png
+12,perfect_world,Sıfır Hata,Zero Mistakes,Bir dünyanın 8 seviyesinin hepsinde 3 yıldız kazan.,Earn 3 stars on all 8 levels of a world.,tek seferlik,1,100,hayır,com.fabsora.algobot.ach.perfect_world,badges/perfect_world.png
+13,friends_4,Yeni Arkadaşlar,New Friends,4 karakterin kilidini aç.,Unlock 4 characters.,artan,4,25,hayır,com.fabsora.algobot.ach.friends_4,badges/friends_4.png
+14,friends_8,Tam Takım,Full Team,8 karakterin hepsinin kilidini aç.,Unlock all 8 characters.,artan,8,75,hayır,com.fabsora.algobot.ach.friends_8,badges/friends_8.png
+15,ice_master,Buz Patencisi,Ice Skater,13+ setinde buzun ilk göründüğü seviyeyi çöz.,"In the 13+ set, solve the level where ice first appears.",tek seferlik,1,25,hayır,com.fabsora.algobot.ach.ice_master,badges/ice_master.png
+16,key_master,Anahtar Ustası,Key Keeper,13+ setinde anahtar ve kapının ilk göründüğü seviyeyi çöz.,"In the 13+ set, solve the level where keys and doors first appear.",tek seferlik,1,25,hayır,com.fabsora.algobot.ach.key_master,badges/key_master.png
+17,portal_master,Işınlan!,Beam Me Over,13+ setinde portalların ilk göründüğü seviyeyi çöz.,"In the 13+ set, solve the level where portals first appear.",tek seferlik,1,25,hayır,com.fabsora.algobot.ach.portal_master,badges/portal_master.png

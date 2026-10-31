@@ -1,3 +1,5 @@
+import 'package:algobot/games/achievement_sync.dart';
+import 'package:algobot/games/noop_game_platform.dart';
 import 'package:algobot/app.dart';
 import 'package:algobot/app_services.dart';
 import 'package:algobot/audio/sound_service.dart';
@@ -121,6 +123,11 @@ Future<_App> _setUp(
             sp,
             platform: review ?? FakeReviewPlatform(),
             clock: c,
+          ),
+          achievements: AchievementSync(
+            database: db,
+            platform: const NoopGamePlatform(),
+            prefs: sp,
           ),
         ),
       ),
@@ -985,7 +992,7 @@ void main() {
       await _settle(tester, 500);
       await _solveGate(tester, l);
       expect(find.text(l.settings), findsOneWidget);
-      expect(find.text(l.about), findsOneWidget);
+      expect(find.text(l.about(l.aboutPrivacy('none'))), findsOneWidget);
 
       await tester.tap(find.text(l.resetProgress));
       await _settle(tester, 400);

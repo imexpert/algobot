@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:algobot/games/achievement_sync.dart';
+import 'package:algobot/games/noop_game_platform.dart';
 import 'package:algobot/app.dart';
 import 'package:algobot/app_services.dart';
 import 'package:algobot/audio/sound_service.dart';
@@ -72,6 +74,11 @@ Future<_Splash> _boot(
     sessions: sessions,
     video: StubRewardedVideoService(available: false),
     review: ReviewService(prefs, platform: FakeReviewPlatform()),
+    achievements: AchievementSync(
+      database: db,
+      platform: const NoopGamePlatform(),
+      prefs: prefs,
+    ),
   );
   final loading = Completer<AppServices>();
   tester.view.physicalSize = const Size(360, 640) * 3;

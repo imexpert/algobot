@@ -7,6 +7,7 @@ import '../../audio/sound_service.dart';
 import '../../characters/character_registry.dart';
 import '../../core/colors.dart';
 import '../../data/session_repository.dart';
+import '../../games/achievement_sync.dart';
 import '../../l10n/l10n.dart';
 import '../../models/age_config.dart';
 import '../../models/age_group.dart';
@@ -22,6 +23,7 @@ import '../../tutorial/tutorial_controller.dart';
 import '../../tutorial/tutorial_scripts.dart';
 import '../../tutorial/tutorial_step.dart';
 import '../screens/level_select_screen.dart';
+import '../widgets/achievement_toast.dart';
 import '../widgets/board_view.dart';
 import '../widgets/game_layout.dart';
 import '../widgets/lives_indicator.dart';
@@ -137,7 +139,17 @@ class _TutorialScreenState extends State<TutorialScreen>
     if (status == TutorialStatus.completed || !settings.tutorialDone(_family)) {
       await settings.setTutorialStatus(_family, status);
     }
-    if (mounted) widget.onDone();
+    if (!mounted) return;
+    // "Öğrenmeye Hazır": yalnızca tamamlanan eğitim (atlamak sayılmaz).
+    final sync = context.read<AchievementSync?>();
+    if (sync != null && status == TutorialStatus.completed) {
+      final progress = context.read<ProgressController>();
+      AchievementToast.show(
+        context,
+        sync.update(achievementFacts(progress, settings)),
+      );
+    }
+    widget.onDone();
   }
 
   Future<void> _confirmSkip() async {

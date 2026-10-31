@@ -366,7 +366,7 @@
   "cancel": "Cancel",
   "reset": "Reset",
   "resetDone": "Progress reset.",
-  "about": "AlgoBot is a puzzle game that teaches kids to think like programmers. No data collected. No internet needed to play. Characters unlock only by playing; there are no purchases.",
+  "about": "AlgoBot is a puzzle game that teaches kids to think like programmers. {privacy} No internet needed to play. Characters unlock only by playing; there are no purchases.",
   "rateApp": "Rate the app",
   "reviewPromptTitle": "You are doing great! 💛",
   "reviewPromptBody": "Enjoying AlgoBot? Show this to a grown-up. They can rate the app in the store.",
@@ -547,7 +547,13 @@
   "tutGotIt": "Got it",
   "tutProgressLabel": "Tutorial progress",
   "tutWrongCard": "This time, tap the {card} card.",
-  "@tutWrongCard": {"placeholders": {"card": {"type": "String"}}},
+  "@tutWrongCard": {
+    "placeholders": {
+      "card": {
+        "type": "String"
+      }
+    }
+  },
   "tutTryAgain": "Almost! Try again.",
   "tutForgot": "You reached the goal, but you forgot something!",
   "tutRemoveWrong": "Tap a wrong card to remove it.",
@@ -568,7 +574,13 @@
   "tutRel15": "To remove a wrong card, tap it in your program. Try it now: remove a card.",
   "tutRel16": "Your turn! Solve this path on your own.",
   "tutRel17": "This is {id, select, bip{a battery} pati{a fish} vizviz{a honey drop} buzi{an ice crystal} tosbi{a strawberry} hop{a carrot} zorp{a star} kivilcim{a coin} other{a treasure}}. Collect it to earn more stars.",
-  "@tutRel17": {"placeholders": {"id": {"type": "String"}}},
+  "@tutRel17": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
   "tutRel18": "1 star: reach the goal. 2 stars: collect everything. 3 stars: use the fewest cards.",
   "tutRel19": "Collect it and reach the goal!",
   "tutRel20": "You have 3 lives. If your program misses the goal, you lose 1. Lives come back over time.",
@@ -589,5 +601,98 @@
   "tutMechIce": "On ice, you slide until something stops you.",
   "tutMechDoor": "Pick up the key and the door opens.",
   "tutMechPortal": "Step into one portal and you come out of the other, facing the same way.",
-  "tutMechWatch": "Watch! Tap Got it when you're ready."
+  "tutMechWatch": "Watch! Tap Got it when you're ready.",
+  "achievements": "Achievements",
+  "achievementName": "{key, select, tutorial_done{Ready to Learn} first_level{First Step} first_perfect{Flawless} last_life{Never Give Up} world_5_7{Little Engineer} world_8_12{Factory Master} world_13_plus{Master Coder} stars_12{Star Collector} stars_36{Star Hunter} stars_72{Superstar} stars_144{Galaxy} perfect_world{Zero Mistakes} friends_4{New Friends} friends_8{Full Team} ice_master{Ice Skater} key_master{Key Keeper} portal_master{Beam Me Over} other{?}}",
+  "@achievementName": {
+    "description": "Başarım adı (anahtara göre)",
+    "placeholders": {
+      "key": {
+        "type": "String"
+      }
+    }
+  },
+  "achievementDesc": "{key, select, tutorial_done{Finish a tutorial from start to end.} first_level{Solve your first level.} first_perfect{Earn 3 stars on a level.} last_life{Solve a level with your last life.} world_5_7{Solve all 16 levels in the ages 5–7 set.} world_8_12{Solve all 16 levels in the ages 8–12 set.} world_13_plus{Solve all 16 levels in the ages 13+ set.} stars_12{Collect 12 stars in total.} stars_36{Collect 36 stars in total.} stars_72{Collect 72 stars in total.} stars_144{Collect all 144 stars.} perfect_world{Earn 3 stars on all 8 levels of a world.} friends_4{Unlock 4 characters.} friends_8{Unlock all 8 characters.} ice_master{In the 13+ set, solve the level where ice first appears.} key_master{In the 13+ set, solve the level where keys and doors first appear.} portal_master{In the 13+ set, solve the level where portals first appear.} other{?}}",
+  "@achievementDesc": {
+    "description": "Başarım açıklaması (anahtara göre)",
+    "placeholders": {
+      "key": {
+        "type": "String"
+      }
+    }
+  },
+  "achievementsSummary": "{unlocked} / {total} achievements",
+  "@achievementsSummary": {
+    "placeholders": {
+      "unlocked": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "achievementUnlocked": "Achievement unlocked!",
+  "achievementLocked": "Locked",
+  "achievementProgress": "{progress} / {target}",
+  "@achievementProgress": {
+    "placeholders": {
+      "progress": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      }
+    }
+  },
+  "achievementsParentArea": "Grown-ups only",
+  "viewOnGamePlatform": "{service, select, playGames{View on Google Play Games} other{View in Game Center}}",
+  "@viewOnGamePlatform": {
+    "description": "Platformun kendi başarımlar ekranı (playGames / gameCenter)",
+    "placeholders": {
+      "service": {
+        "type": "String"
+      }
+    }
+  },
+  "openLeaderboard": "Leaderboard: Total Stars",
+  "leaderboardName": "Total Stars",
+  "aboutPrivacy": "{service, select, playGames{No in-game data is collected. Google Play Games is optionally used for achievements.} gameCenter{No in-game data is collected. Game Center is optionally used for achievements.} other{No data collected.}}",
+  "@aboutPrivacy": {
+    "description": "Gizlilik cümlesi; oyun platformuna göre (playGames / gameCenter / none)",
+    "placeholders": {
+      "service": {
+        "type": "String"
+      }
+    }
+  },
+  "@about": {
+    "placeholders": {
+      "privacy": {
+        "type": "String"
+      }
+    }
+  },
+  "resetAchievementsKept": "Earned achievements will not be removed.",
+  "gameAccount": "Game account",
+  "connectGamePlatform": "{service, select, playGames{Connect to Play Games} other{Connect to Game Center}}",
+  "@connectGamePlatform": {
+    "description": "Ebeveyn paneli: elle bağlanma butonu (playGames / gameCenter)",
+    "placeholders": {
+      "service": {
+        "type": "String"
+      }
+    }
+  },
+  "connectedGamePlatform": "{service, select, playGames{Connected to Play Games} other{Connected to Game Center}}",
+  "@connectedGamePlatform": {
+    "description": "Ebeveyn paneli: bağlı durumu (playGames / gameCenter)",
+    "placeholders": {
+      "service": {
+        "type": "String"
+      }
+    }
+  },
+  "connectFailed": "Couldn't connect. You can try again later.",
+  "gameCenterSettingsHint": "Sign in from Settings > Game Center, then reopen the app."
 }

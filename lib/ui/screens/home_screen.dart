@@ -5,11 +5,14 @@ import 'package:provider/provider.dart';
 import '../../audio/sound_service.dart';
 import '../../characters/character_registry.dart';
 import '../../core/colors.dart';
+import '../../games/achievement_sync.dart';
 import '../../l10n/l10n.dart';
+import '../../state/progress_controller.dart';
 import '../../state/settings_controller.dart';
 import '../widgets/app_button.dart';
 import '../widgets/parent_gate_dialog.dart';
 import '../widgets/character_view.dart';
+import 'achievements_screen.dart';
 import 'character_gallery_screen.dart';
 import '../tutorial/tutorial_screen.dart';
 import 'character_select_screen.dart';
@@ -22,6 +25,23 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Açılış ekranı bitti: başarımlar mevcut ilerlemeden hesaplanır ve oyun
+    // platformu oturumu sessizce denenir (uygulama başına bir kez).
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final sync = context.read<AchievementSync?>();
+      final progress = context.read<ProgressController?>();
+      if (sync == null || progress == null) return;
+      sync.start(
+        achievementFacts(progress, context.read<SettingsController>()),
+        progress.totalStarsAll,
+      );
+    });
+  }
+
   void _open(Widget page) {
     context.read<SoundService>().play(Sound.tap);
     Navigator.push(context, MaterialPageRoute<void>(builder: (_) => page));
@@ -137,16 +157,27 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 const SizedBox(height: 12),
+                // Karakterler ve Başarımlar yan yana (ikincil).
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 48),
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: AppButton(
-                      label: context.l10n.characters,
-                      primary: false,
-                      icon: Icons.pets,
-                      onPressed: () => _open(const CharacterSelectScreen()),
-                    ),
+                  padding: const EdgeInsets.symmetric(horizontal: 32),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: _HomeTile(
+                          label: context.l10n.characters,
+                          icon: Icons.pets,
+                          onPressed: () => _open(const CharacterSelectScreen()),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _HomeTile(
+                          label: context.l10n.achievements,
+                          icon: Icons.emoji_events,
+                          onPressed: () => _open(const AchievementsScreen()),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -173,4 +204,48 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
+}
+
+/// Ana ekranda yan yana duran ikincil buton: simge üstte, yazı altta.
+/// Dar ekranda ve büyük yazıda yazı kesilmez, küçülür.
+class _HomeTile extends StatelessWidget {
+  const _HomeTile({
+    required this.label,
+    required this.icon,
+    required this.onPressed,
+  });
+
+  final String label;
+  final IconData icon;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) => ConstrainedBox(
+    constraints: const BoxConstraints(minHeight: 64),
+    child: FilledButton(
+      onPressed: onPressed,
+      style: FilledButton.styleFrom(
+        backgroundColor: AppColors.secondaryButton,
+        foregroundColor: AppColors.secondaryButtonText,
+        elevation: 0,
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 24),
+          const SizedBox(height: 2),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              label,
+              maxLines: 1,
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
 }

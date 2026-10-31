@@ -189,8 +189,14 @@ void main() {
   });
 
   test('QA-10: "Hakkında" metni değerlendirme butonuyla çelişmez', () {
-    expect(tr.about, contains('Oynamak için internet gerekmez'));
-    expect(en.about, contains('No internet needed to play'));
+    expect(
+      tr.about(tr.aboutPrivacy('none')),
+      contains('Oynamak için internet gerekmez'),
+    );
+    expect(
+      en.about(en.aboutPrivacy('none')),
+      contains('No internet needed to play'),
+    );
   });
 
   testWidgets('QA-9: Geniş yatay ekranda tahta ve kontroller yan yana', (
