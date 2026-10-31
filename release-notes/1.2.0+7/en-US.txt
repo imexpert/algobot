@@ -1,0 +1,5 @@
+New: Interactive tutorial! Bip teaches you how to play, step by step. Watch it again any time with "How to play" on the home screen or the "?" button in a level.
+• A big yellow arrow shows where your character is facing, with a hint for the next square.
+• Press and hold a card to see what it does.
+• Short intros for ice, keys and doors, and portals in the 13+ age group.
+• General improvements.

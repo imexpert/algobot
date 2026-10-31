@@ -1,0 +1,5 @@
+Yeni: Etkileşimli eğitim! Bip, oyunu adım adım yaparak öğretir. Ana ekrandaki "Nasıl oynanır?" ile ya da oyundaki "?" ile istediğin zaman tekrar izleyebilirsin.
+• Karakterin yönünü gösteren büyük sarı ok ve gideceği kareyi gösteren ipucu.
+• Bir karta basılı tutunca ne yaptığını gösteren açıklama.
+• 13+ yaş grubunda buz, anahtar-kapı ve portal için kısa tanıtımlar.
+• Genel iyileştirmeler.
